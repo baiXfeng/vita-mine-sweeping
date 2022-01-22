@@ -221,7 +221,7 @@ private:
 
 class ButtonWidget : public ImageWidget {
 public:
-    typedef std::function<void()> CallBack;
+    typedef std::function<void(Widget*)> CallBack;
     typedef std::shared_ptr<Texture> TexturePtr;
     enum State {
         NORMAL = 0,
@@ -241,7 +241,7 @@ public:
     void setPressed(bool pressed);
     bool enable() const;
     bool pressed() const;
-    void setClick(CallBack const& cb);
+    void setSelector(CallBack const& cb);
     void click();
     void setState(State state);
 private:

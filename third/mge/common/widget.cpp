@@ -686,13 +686,13 @@ bool ButtonWidget::pressed() const {
     return _state == PRESSED;
 }
 
-void ButtonWidget::setClick(CallBack const& cb) {
+void ButtonWidget::setSelector(CallBack const& cb) {
     _callback = cb;
 }
 
 void ButtonWidget::click() {
     if (_enable and _callback != nullptr) {
-        _callback();
+        _callback(this);
     }
 }
 

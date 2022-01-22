@@ -9,13 +9,15 @@
 #include "uilayout/ui-layout.h"
 #include "context.h"
 
-class GameView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener {
+class GameView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutSelectorAssigner, public ui::LayoutNodeListener {
 public:
     GameView();
 private:
     bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) override;
+    Selector onResolveSelector(mge::Widget* target, const char* name) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
+    void onOption(mge::Widget* sender);
 private:
     Context _c;
     mge::ButtonWidget* _smile[3];

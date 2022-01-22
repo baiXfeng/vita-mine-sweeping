@@ -20,7 +20,16 @@ bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget
     return false;
 }
 
+GameView::Selector GameView::onResolveSelector(mge::Widget* target, const char* name) {
+    UI_LAYOUT_SELECTOR_BIND(this, "onOption", GameView::onOption);
+    return nullptr;
+}
+
 void GameView::onLayoutLoaded() {
+
+}
+
+void GameView::onOption(mge::Widget* sender) {
 
 }
 

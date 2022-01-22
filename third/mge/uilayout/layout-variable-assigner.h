@@ -7,12 +7,18 @@
 
 #include <string.h>
 #include <assert.h>
+#include <functional>
 
 #define UI_LAYOUT_MEMBER_ASSIGN(TARGET, NAME, TYPE, MEMBER) \
     if (target == TARGET && strcmp(NAME, name) == 0) {      \
         MEMBER = dynamic_cast<TYPE>(node);                  \
         assert(MEMBER && "LayoutVariableAssigner::onAssignMember fail."); \
         return true;                                                        \
+    }
+
+#define UI_LAYOUT_SELECTOR_BIND(TARGET, SELECTORNAME, METHOD)   \
+    if (target == TARGET && strcmp(SELECTORNAME, name) == 0) {  \
+        return std::bind(&METHOD, TARGET, std::placeholders::_1); \
     }
 
 namespace mge {
@@ -27,6 +33,16 @@ namespace ui {
         virtual bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) = 0;
         virtual bool onAssignProperty(mge::Widget* target, const char* name, const char* value) {
             return false;
+        }
+    };
+
+    class LayoutSelectorAssigner {
+    public:
+        typedef std::function<void(mge::Widget*)> Selector;
+    public:
+        virtual ~LayoutSelectorAssigner() {}
+        virtual Selector onResolveSelector(mge::Widget* target, const char* name) {
+            return nullptr;
         }
     };
 

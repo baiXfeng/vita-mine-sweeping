@@ -84,6 +84,14 @@ namespace ui {
         }
     }
 
+    NodeLoader::Selector NodeLoader::onResolveSelector(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value) {
+        auto owner = reader->owner();
+        if (auto selector_assigner = dynamic_cast<LayoutSelectorAssigner*>(owner); selector_assigner) {
+            return selector_assigner->onResolveSelector(owner, value);
+        }
+        return nullptr;
+    }
+
     Node ImageWidgetLoader::createNode(mge::Widget* parent, LayoutReader* reader) {
         return Node(new mge::ImageWidget);
     }
@@ -166,7 +174,8 @@ namespace ui {
         } else if (strcmp(name, "State") == 0) {
             node->fast_to<ButtonWidget>()->setState(ButtonWidget::State(atoi(value)));
         } else if (strcmp(name, "Selector") == 0) {
-
+            auto selector = onResolveSelector(node, parent, reader, name, value);
+            node->fast_to<ButtonWidget>()->setSelector(selector);
         } else {
             NodeLoader::onParseProperty(node, parent, reader, name, value);
         }

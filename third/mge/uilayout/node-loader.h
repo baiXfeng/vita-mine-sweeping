@@ -6,6 +6,7 @@
 #define SDL2_UI_NODE_LOADER_H
 
 #include <memory>
+#include "layout-variable-assigner.h"
 
 namespace mge {
     class Widget;
@@ -22,9 +23,11 @@ namespace ui {
     class NodeLoader {
     public:
         typedef std::shared_ptr<mge::Widget> Node;
+        typedef LayoutSelectorAssigner::Selector Selector;
     public:
         virtual ~NodeLoader();
         virtual void onParseProperty(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value);
+        virtual Selector onResolveSelector(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value);
     public:
         Node loadNode(mge::Widget* parent, LayoutReader* reader);
     protected:
