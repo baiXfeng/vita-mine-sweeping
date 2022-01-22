@@ -40,7 +40,7 @@ namespace LOG {
 #define LOG_FINI()
 #else
 #define LOG_INIT()
-#define LOG(format, args...)
+#define LOG(format, args...) printf(format, ##args)
 #define LOG_FINI()
 #endif
 

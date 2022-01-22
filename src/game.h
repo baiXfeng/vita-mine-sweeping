@@ -9,6 +9,7 @@
 #include "uilayout/ui-layout.h"
 #include "context.h"
 
+class PlayGame;
 class GameView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutSelectorAssigner, public ui::LayoutNodeListener {
 public:
     GameView();
@@ -17,12 +18,14 @@ private:
     Selector onResolveSelector(mge::Widget* target, const char* name) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
-    void onOption(mge::Widget* sender);
+    void onOption(Widget* sender);
+    void onRestart(Widget* sender);
 private:
     Context _c;
     mge::ButtonWidget* _smile[3];
     mge::TTFLabel* _time;
     mge::TTFLabel* _mine;
+    PlayGame* _play;
 };
 
 class GameViewLoader : public ui::NodeLoader {

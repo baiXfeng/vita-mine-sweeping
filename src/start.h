@@ -8,7 +8,7 @@
 #include "common/widget.h"
 #include "uilayout/ui-layout.h"
 
-class StartView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener {
+class StartView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener, public mge::ScreenWidgetListener {
 public:
     StartView();
 private:
@@ -16,6 +16,8 @@ private:
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
     void gotoGame();
+private:
+    void onScreenWake() override;
 private:
     mge::TTFLabel* _tips;
 };

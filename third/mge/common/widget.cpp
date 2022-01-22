@@ -828,24 +828,37 @@ void ScreenWidget::push(Widget::Ptr const& widget) {
     _root->addChild(widget);
     for (auto& child : _root->children()) {
         if (child.get() == widget.get()) {
-            return;
+            break;
         }
         child->setVisible(false);
     }
+    if (auto p = dynamic_cast<ScreenWidgetListener*>(widget.get()); p) {
+        p->onScreenLoaded();
+    }
+    if (_root->children().size() >= 2) {
+        auto child = _root->children()[ _root->children().size() - 2 ];
+        if (auto p = dynamic_cast<ScreenWidgetListener*>(child.get()); p) {
+            p->onScreenSleep();
+        }
+    }
+    widget->performLayout();
 }
 
 void ScreenWidget::replace(Widget::Ptr const& widget) {
-    this->pop();
+    this->pop(false);
     this->push(widget);
 }
 
-void ScreenWidget::pop() {
+void ScreenWidget::pop(bool wake_last) {
     auto& c = _root->children();
     if (c.size()) {
         _root->removeChild(c.back());
     }
     if (c.size()) {
         c.back()->setVisible(true);
+        if (auto p = dynamic_cast<ScreenWidgetListener*>(c.back().get()); p and wake_last) {
+            p->onScreenWake();
+        }
     }
 }
 

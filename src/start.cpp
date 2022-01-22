@@ -15,6 +15,11 @@ StartView::StartView():_tips(nullptr) {
     _game.setRenderColor({0, 0, 0, 255});
 }
 
+void StartView::onScreenWake() {
+    stopAllActions();
+    onLayoutLoaded();
+}
+
 bool StartView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
     UI_LAYOUT_MEMBER_ASSIGN(this, "tips_text", mge::TTFLabel*, _tips);
     return false;
@@ -30,9 +35,7 @@ void StartView::onLayoutLoaded() {
 void StartView::onButtonDown(int key) {
     sleep_gamepad(10.0f);
     auto blink = Action::Ptr(new Blink(_tips, 5, 1.0f));
-    auto call = Action::New<CallBackVoid>([this](){
-        _tips->setVisible(true);
-        sleep_gamepad(0.0f);
+    auto call = Action::New<CallBackVoid>([this]{
         this->gotoGame();
     });
     _tips->setVisible(true);
@@ -41,5 +44,7 @@ void StartView::onButtonDown(int key) {
 }
 
 void StartView::gotoGame() {
+    sleep_gamepad(0.0f);
+    _tips->setVisible(true);
     _game.screen().push( _game.uilayout().readNode("assets/layouts/game.xml") );
 }

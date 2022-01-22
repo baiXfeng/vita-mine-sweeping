@@ -92,9 +92,8 @@ namespace ui {
         }
 
         // 完成通知
-        auto notify = dynamic_cast<LayoutNodeListener*>(node.get());
-        if (notify) {
-            notify->onLayoutLoaded();
+        if (auto widget = dynamic_cast<LayoutNodeListener*>(node.get()); widget) {
+            widget->onLayoutLoaded();
         }
 
         return node;

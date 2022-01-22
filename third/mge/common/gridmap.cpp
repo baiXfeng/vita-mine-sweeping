@@ -478,8 +478,9 @@ mge_begin
         auto layer_number = _dataSource->numberOfLayersInWidget(this);
         for (int i = 0; i < layer_number; ++i) {
             auto layer = New<GridMapLayer>(this, i);
+            layer->setSize(_container->size());
             _container->addChild(layer);
-            _tileLayers.push_back(layer->to<GridMapLayer>());
+            _tileLayers.push_back(layer->fast_to<GridMapLayer>());
         }
 
         auto begin_position = _container->position() * -1;

@@ -20,6 +20,14 @@ mge_begin
 
 void TestWidget();
 
+class ScreenWidgetListener {
+public:
+    virtual ~ScreenWidgetListener() {}
+    virtual void onScreenLoaded() {}
+    virtual void onScreenWake() {}
+    virtual void onScreenSleep() {}
+};
+
 class Action;
 class BaseActionExecuter;
 class Widget : public GamePadListener, public Event::Listener {
@@ -297,7 +305,7 @@ public:
 public:
     void push(Widget::Ptr const& widget);
     void replace(Widget::Ptr const& widget);
-    void pop();
+    void pop(bool wake_last = true);
     void popAll();
     template <typename T, typename... Args> void push(Args const&... args) {
         Widget::Ptr widget(new T(args...));

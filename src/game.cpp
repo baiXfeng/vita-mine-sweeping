@@ -5,10 +5,11 @@
 #include "game.h"
 #include "common/game.h"
 #include "common/widget.h"
+#include "play.h"
 
-GameView::GameView():_time(nullptr), _mine(nullptr) {
+GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
     memset(_smile, 0, sizeof(_smile));
-    _game.setRenderColor({55, 55, 55, 255});
+    _game.setRenderColor({18, 103, 72, 255});
 }
 
 bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
@@ -22,17 +23,31 @@ bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget
 
 GameView::Selector GameView::onResolveSelector(mge::Widget* target, const char* name) {
     UI_LAYOUT_SELECTOR_BIND(this, "onOption", GameView::onOption);
+    UI_LAYOUT_SELECTOR_BIND(this, "onRestart1", GameView::onRestart);
+    UI_LAYOUT_SELECTOR_BIND(this, "onRestart2", GameView::onRestart);
+    UI_LAYOUT_SELECTOR_BIND(this, "onRestart3", GameView::onRestart);
     return nullptr;
 }
 
 void GameView::onLayoutLoaded() {
+    addChild(Ptr(_play = new PlayGame(_c)), 0);
+    _c.map.resize(10, 10);
+    _play->grid()->reload_data();
+    auto camera = _play->grid()->getCamera();
+    auto layer_size = _play->grid()->getLayer(0)->size();
+    camera->setCameraPosition((layer_size - size()) * 0.5f);
+}
+
+void GameView::onOption(Widget* sender) {
 
 }
 
-void GameView::onOption(mge::Widget* sender) {
+void GameView::onRestart(Widget* sender) {
 
 }
 
 void GameView::onButtonDown(int key) {
-
+    if (key == KeyCode::B) {
+        _game.screen().pop();
+    }
 }
