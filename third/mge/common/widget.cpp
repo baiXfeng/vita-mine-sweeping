@@ -824,7 +824,7 @@ ScreenWidget::ScreenWidget():_curtain(nullptr), _root(nullptr) {
     _action = ActionExecuterPtr(new SafeActionExecuter); // make action executer thread safe
 }
 
-void ScreenWidget::push(Widget::Ptr& widget) {
+void ScreenWidget::push(Widget::Ptr const& widget) {
     _root->addChild(widget);
     for (auto& child : _root->children()) {
         if (child.get() == widget.get()) {
@@ -834,7 +834,7 @@ void ScreenWidget::push(Widget::Ptr& widget) {
     }
 }
 
-void ScreenWidget::replace(Widget::Ptr& widget) {
+void ScreenWidget::replace(Widget::Ptr const& widget) {
     this->pop();
     this->push(widget);
 }

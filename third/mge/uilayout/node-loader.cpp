@@ -169,4 +169,16 @@ namespace ui {
             NodeLoader::onParseProperty(node, parent, reader, name, value);
         }
     }
+
+    Node MaskWidgetLoader::createNode(mge::Widget* parent, LayoutReader* reader) {
+        return Node(new mge::MaskWidget({255, 255, 255, 255}));
+    }
+
+    void MaskWidgetLoader::onParseProperty(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value) {
+        if (strcmp(name, "Color") == 0) {
+            node->fast_to<MaskWidget>()->setColor(getHexColor(value));
+        } else {
+            NodeLoader::onParseProperty(node, parent, reader, name, value);
+        }
+    }
 }

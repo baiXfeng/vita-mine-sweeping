@@ -25,8 +25,9 @@ set(BASIC_SOURCE "")
 file( GLOB
 		BASIC_SOURCE
 		*.c*
-		common/*.c*
-		uilayout/*.c*
+		src/*.c*
+		third/mge/common/*.c*
+		third/mge/uilayout/*.c*
 		third/lua/*.c*
 		third/lutok3/src/lutok3/*.c*
 		third/box2d/src/collision/*.c*
@@ -46,6 +47,7 @@ list(REMOVE_ITEM BASIC_SOURCE
 include_directories(
 		.
 		third
+		third/mge
 		third/entt/src
 		third/cereal/include
 		third/eluna/eluna

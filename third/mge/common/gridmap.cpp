@@ -3,7 +3,7 @@
 //
 
 #include "gridmap.h"
-#include "common/collision.h"
+#include "collision.h"
 #include <assert.h>
 
 mge_begin

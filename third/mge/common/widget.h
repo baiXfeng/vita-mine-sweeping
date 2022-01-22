@@ -295,8 +295,8 @@ class ScreenWidget : protected WindowWidget {
 public:
     ScreenWidget();
 public:
-    void push(Widget::Ptr& widget);
-    void replace(Widget::Ptr& widget);
+    void push(Widget::Ptr const& widget);
+    void replace(Widget::Ptr const& widget);
     void pop();
     void popAll();
     template <typename T, typename... Args> void push(Args const&... args) {

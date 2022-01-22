@@ -14,6 +14,7 @@ namespace ui {
         addLoader<TTFLabelLoader>("TTFLabel");
         addLoader<WidgetLoader>("XmlLayout");
         addLoader<WidgetLoader>("Widget");
+        addLoader<MaskWidgetLoader>("MaskWidget");
     }
 
     void LoaderPool::addLoader(std::string const& className, Loader const& loader) {
