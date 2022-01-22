@@ -34,13 +34,16 @@ public:
     void remove(WidgetPtr const& widget);
     void remove(Widget const* widget);
     void onEvent(SDL_Event const& event);
-    void onFingerEvent(Event e, Vector2i const& postion);
 private:
-    void onFingerDown(Vector2i const& postion);
-    void onFingerUp(Vector2i const& postion);
-    void onFingerMotion(Vector2i const& postion);
+    void onMouseEvent(SDL_Event const& event);
+    void onFingerEvent(SDL_Event const& event);
+private:
+    void onFingerDown(Vector2i const& point);
+    void onFingerUp(Vector2i const& point);
+    void onFingerMotion(Vector2i const& point);
 private:
     bool _sleep;
+    bool _usefinger;
     bool _finger_downed;
 };
 

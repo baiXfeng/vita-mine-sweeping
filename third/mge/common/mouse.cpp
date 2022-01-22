@@ -4,12 +4,15 @@
 
 #include "mouse.h"
 #include "game.h"
+#include "widget.h"
 #include "log.h"
 
 mge_begin
 
-Mouse::Mouse():_finger_downed(false) {
-
+Mouse::Mouse():_finger_downed(false), _usefinger(false) {
+#if defined(__vita__)
+    _usefinger = true;
+#endif
 }
 
 void Mouse::sleep(float seconds) {
@@ -29,21 +32,22 @@ void Mouse::remove(Widget const* widget) {
 }
 
 void Mouse::onEvent(SDL_Event const& event) {
+    _usefinger ? onFingerEvent(event) : onMouseEvent(event);
+}
+
+void Mouse::onMouseEvent(SDL_Event const& event) {
     switch (event.type) {
         case SDL_MOUSEBUTTONDOWN:
-            //printf("鼠标按下: %d, %d\n", event.button.x, event.button.y);
             _finger_downed = true;
-            onFingerEvent(FINGER_DOWN, {event.button.x, event.button.y});
+            onFingerDown({event.button.x, event.button.y});
             break;
         case SDL_MOUSEBUTTONUP:
-            //printf("鼠标弹起: %d, %d\n", event.button.x, event.button.y);
             _finger_downed = false;
-            onFingerEvent(FINGER_UP, {event.button.x, event.button.y});
+            onFingerUp({event.button.x, event.button.y});
             break;
         case SDL_MOUSEMOTION:
             if (_finger_downed) {
-                //printf("鼠标移动: %d, %d\n", event.button.x, event.button.y);
-                onFingerEvent(FINGER_MOTION, {event.button.x, event.button.y});
+                onFingerMotion({event.button.x, event.button.y});
             }
             break;
         default:
@@ -51,32 +55,48 @@ void Mouse::onEvent(SDL_Event const& event) {
     }
 }
 
-void Mouse::onFingerEvent(Event e, Vector2i const& postion) {
-    switch (e) {
-        case FINGER_DOWN:
-            onFingerDown(postion);
+void Mouse::onFingerEvent(SDL_Event const& event) {
+    if (event.tfinger.touchId != 0) {
+        // 排除背面触摸
+        return;
+    }
+    switch (event.type) {
+        case SDL_FINGERDOWN:
+        {
+            auto& size = _game.screen().screen_size();
+            auto scale = Vector2f{event.tfinger.x, event.tfinger.y};
+            onFingerDown((size * scale).to<int>());
+        }
             break;
-        case FINGER_UP:
-            onFingerUp(postion);
+        case SDL_FINGERUP:
+        {
+            auto& size = _game.screen().screen_size();
+            auto scale = Vector2f{event.tfinger.x, event.tfinger.y};
+            onFingerUp((size * scale).to<int>());
+        }
             break;
-        case FINGER_MOTION:
-            onFingerMotion(postion);
+        case SDL_FINGERMOTION:
+        {
+            auto& size = _game.screen().screen_size();
+            auto scale = Vector2f{event.tfinger.x, event.tfinger.y};
+            onFingerMotion((size * scale).to<int>());
+        }
             break;
         default:
             break;
     }
 }
 
-void Mouse::onFingerDown(Vector2i const& postion) {
-
+void Mouse::onFingerDown(Vector2i const& point) {
+    LOG("鼠标按下: %d, %d\n", point.x, point.y);
 }
 
-void Mouse::onFingerUp(Vector2i const& postion) {
-
+void Mouse::onFingerUp(Vector2i const& point) {
+    LOG("鼠标弹起: %d, %d\n", point.x, point.y);
 }
 
-void Mouse::onFingerMotion(Vector2i const& postion) {
-
+void Mouse::onFingerMotion(Vector2i const& point) {
+    LOG("鼠标移动: %d, %d\n", point.x, point.y);
 }
 
 mge_end
