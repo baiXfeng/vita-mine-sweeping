@@ -165,6 +165,8 @@ namespace ui {
             node->fast_to<ButtonWidget>()->setEnable(strcmp(value, "true") == 0);
         } else if (strcmp(name, "State") == 0) {
             node->fast_to<ButtonWidget>()->setState(ButtonWidget::State(atoi(value)));
+        } else if (strcmp(name, "Selector") == 0) {
+
         } else {
             NodeLoader::onParseProperty(node, parent, reader, name, value);
         }

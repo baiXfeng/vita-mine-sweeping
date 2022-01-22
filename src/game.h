@@ -7,6 +7,7 @@
 
 #include "common/widget.h"
 #include "uilayout/ui-layout.h"
+#include "context.h"
 
 class GameView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener {
 public:
@@ -16,6 +17,10 @@ private:
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
 private:
+    Context _c;
+    mge::ButtonWidget* _smile[3];
+    mge::TTFLabel* _time;
+    mge::TTFLabel* _mine;
 };
 
 class GameViewLoader : public ui::NodeLoader {

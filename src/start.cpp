@@ -5,11 +5,14 @@
 #include "start.h"
 #include "common/action.h"
 #include "common/game.h"
+#include "common/xml_layout.h"
+#include "uilayout/ui-layout.h"
+#include "game.h"
 
 using namespace mge;
 
 StartView::StartView():_tips(nullptr) {
-
+    _game.setRenderColor({0, 0, 0, 255});
 }
 
 bool StartView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
@@ -38,5 +41,5 @@ void StartView::onButtonDown(int key) {
 }
 
 void StartView::gotoGame() {
-    _game.screen().pop();
+    _game.screen().push( _game.uilayout().readNode("assets/layouts/game.xml") );
 }
