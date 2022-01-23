@@ -47,7 +47,7 @@ void GameView::onLayoutLoaded() {
     addChild(Ptr(_play = new PlayGame(_c)), 0);
     auto camera = _play->grid()->getCamera();
     auto layer_size = _play->grid()->getLayer(0)->size();
-    camera->setCameraPosition((layer_size - size()) * mge::Vector2f{0.5f, 0.65f});
+    camera->setCameraPosition((layer_size - size()) * 0.5f);
 }
 
 void GameView::onUpdate(float delta) {
