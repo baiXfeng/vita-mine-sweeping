@@ -108,7 +108,9 @@ void Mouse::onFingerDown(Vector2i const& point) {
                 if (point.x > (int)position.x and point.x < int(position.x + size.x) and
                     point.y > (int)position.y and point.y < int(position.y + size.y)) {
                     if (resp->onTouchBegen(point - position.to<int>())) {
-                        _current = resp;
+                        if (_current = resp; resp->owner()->parent() == nullptr) {
+                            _current = nullptr;
+                        }
                         return;
                     }
                 }

@@ -5,9 +5,11 @@
 #include "game.h"
 #include "common/game.h"
 #include "common/widget.h"
+#include "common/xml_layout.h"
 #include "play.h"
+#include "gameover.h"
 
-GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr), _game_finished(false) {
+GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
     memset(_smile, 0, sizeof(_smile));
     _game.setRenderColor({18, 103, 72, 255});
 
@@ -49,7 +51,7 @@ void GameView::onLayoutLoaded() {
 }
 
 void GameView::onUpdate(float delta) {
-    if (!_game_finished) {
+    if (!_c.finished) {
         _c.seconds += delta;
         _c.notify(&ContextObserver::onTimeModify, _c.seconds);
     }
@@ -74,16 +76,15 @@ void GameView::onButtonDown(int key) {
 void GameView::onEvent(mge::Event const& e) {
     if (e.Id() == EVENT_ID::GAME_OVER) {
         this->setFaceState(1);
+        this->addGameOver("GAME OVER!");
         _play->setTouchEnable(false);
-        _game_finished = true;
     } else if (e.Id() == EVENT_ID::GAME_START) {
         this->setFaceState(0);
         _play->setTouchEnable(true);
-        _game_finished = false;
     } else if (e.Id() == EVENT_ID::GAME_WIN) {
         this->setFaceState(2);
+        this->addGameOver("YOU WIN!");
         _play->setTouchEnable(false);
-        _game_finished = true;
     }
 }
 
@@ -102,4 +103,10 @@ void GameView::setFaceState(int state) {
     for (int i = 0; i < 3; ++i) {
         _smile[i]->setVisible(state == i ? true : false);
     }
+}
+
+void GameView::addGameOver(std::string const& tips) {
+    auto node = _game.uilayout().readNode("assets/layouts/gameover.xml");
+    node->fast_to<GameOverView>()->setTipsText(tips);
+    addChild(node);
 }

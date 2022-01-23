@@ -14,15 +14,21 @@
 #include "uilayout/ui-layout.h"
 #include "src/start.h"
 #include "src/game.h"
+#include "src/play.h"
+#include "src/gameover.h"
 
-class MyGame : public mge::Game::App {
+class MyApp : public mge::Game::App {
 public:
-    MyGame() {}
+    MyApp() {}
     void init() override {
         LOG_INIT();
 
         _game.uilayout().getLoaderPool()->addLoader<StartViewLoader>("StartView");
         _game.uilayout().getLoaderPool()->addLoader<GameViewLoader>("GameView");
+        _game.uilayout().getLoaderPool()->addLoader<GameOverViewLoader>("GameOver");
+
+        _game.screen().push( _game.uilayout().readNode("assets/layouts/game.xml") );
+        return;
 
         auto texture = mge::res::load_texture("assets/images/title-bg.png");
         _game.screen().push<mge::ImageWidget>(texture);

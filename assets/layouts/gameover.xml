@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Layout><GameOver><MaskWidget Color='0x00000020'/><TTFLabel Font='assets/fonts/prstart.ttf:36' Color='0xffffffff' Text='GAME OVER!' Anchor='0.5, 0.5' Position='50%, 50%' Assign='tips_text'/></GameOver></Layout>

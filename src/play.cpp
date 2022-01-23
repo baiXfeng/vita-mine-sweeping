@@ -89,7 +89,7 @@ private:
     Texture::Ptr _wrong;
 };
 
-#define TILE_SIZE 40
+#define TILE_SIZE 48
 
 PlayGame::PlayGame(Context& c):ctx(&c), _gridlayer(new GridMapWidget), _tile(nullptr) {
     _gridlayer->setDataSource(this);

@@ -10,7 +10,6 @@ mge_begin
 FingerResponder::FingerResponder(Widget* widget):_owner(widget) {}
 
 uint32_t FingerResponder::getLayerIndex() const {
-    assert(_owner && "FingerResponder::getLayerIndex error.");
     if (auto widget = _owner; widget) {
         auto ret = 0;
         while ((widget = widget->parent()) and ++ret) {}

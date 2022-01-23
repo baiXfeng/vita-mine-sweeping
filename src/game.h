@@ -31,8 +31,8 @@ private:
     void onMineNumberModify(uint32_t number) override;
 private:
     void setFaceState(int state);
+    void addGameOver(std::string const& tips);
 private:
-    bool _game_finished;
     Context _c;
     mge::ButtonWidget* _smile[3];
     mge::TTFLabel* _time;

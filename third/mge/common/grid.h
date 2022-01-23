@@ -8,6 +8,8 @@
 #include "macro.h"
 #include "vector2.h"
 #include <vector>
+#include <functional>
+#include <assert.h>
 
 mge_begin
 

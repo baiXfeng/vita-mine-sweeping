@@ -1,7 +1,7 @@
 
-#include "game.h"
+#include "myapp.h"
 
 int GameApp(int argc, char * argv[]) {
-    MyGame game;
+    MyApp game;
     return game.run();
 }

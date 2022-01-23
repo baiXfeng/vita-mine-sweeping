@@ -89,6 +89,7 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
     c.notify(&ContextObserver::onMineNumberModify, c.mine_number);
 
     c.flag = false;
+    c.finished = false;
     return true;
 }
 
@@ -129,6 +130,9 @@ public:
     }
 private:
     void check() {
+        if (ctx.finished) {
+            return;
+        }
         int hidden_number = 0;
         std::vector<Tile*> mine_array;
         for (auto& cell : ctx.grid.cells()) {
@@ -145,6 +149,7 @@ private:
             }
             ctx.mine_number = 0;
             ctx.notify(&ContextObserver::onMineNumberModify, ctx.mine_number);
+            ctx.finished = true;
             _game.event().notify(EVENT_ID::GAME_WIN);
         }
     }
@@ -170,6 +175,7 @@ bool open_tile(Context& c, mge::Vector2i const& position) {
         cell.bomb = true;
         cell.hidden = false;
         clear_all_mine(c);
+        c.finished = true;
         _game.event().notify(mge::Event(EVENT_ID::GAME_OVER));
         return true;
     }
