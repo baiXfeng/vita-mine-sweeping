@@ -5,6 +5,7 @@
 #include "game.h"
 #include "fps.h"
 #include "widget.h"
+#include "mouse.h"
 
 #include <memory>
 #include <iostream>

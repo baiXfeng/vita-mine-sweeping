@@ -9,6 +9,7 @@
 #include "loadres.h"
 #include "action.h"
 #include "font.h"
+#include "mouse.h"
 
 mge_begin
 
@@ -47,6 +48,7 @@ _userdata(nullptr),
 _visible(true),
 _update(false),
 _clip(false),
+_touchEnable(true),
 _pause_action_when_hidden(false),
 _dirty(true),
 _action(ActionExecuterPtr(new ActionExecuter)),
@@ -126,6 +128,14 @@ void Widget::setVisible(bool visible) {
 
 void Widget::performLayout() {
     this->modifyLayout();
+}
+
+bool Widget::isTouchEnabled() const {
+    return _touchEnable;
+}
+
+void Widget::setTouchEnable(bool b) {
+    _touchEnable = b;
 }
 
 void Widget::addChild(WidgetPtr const& widget) {
@@ -479,6 +489,18 @@ void Widget::resumeAllActions() {
 
 //=====================================================================================
 
+LayerWidget::LayerWidget():FingerResponder(this) {
+    connect(ON_ENTER, [this](Widget* sender){
+        _game.mouse().add(this);
+    });
+    connect(ON_EXIT, [this](Widget* sender){
+        _game.mouse().remove(this);
+    });
+    enableUpdate(true);
+}
+
+//=====================================================================================
+
 WindowWidget::WindowWidget() {
     enableUpdate(true);
 }
@@ -486,7 +508,7 @@ WindowWidget::WindowWidget() {
 //=====================================================================================
 
 RenderTargetWidget::RenderTargetWidget():_hasRender(false), _render(std::make_shared<Render>()) {
-
+    enableUpdate(true);
 }
 
 void RenderTargetWidget::setRenderTargetSize(Vector2i const& size) {
@@ -515,7 +537,7 @@ void RenderTargetWidget::draw(SDL_Renderer* renderer) {
     if (_hasRender) {
         drawRenderTarget(renderer);
     } else {
-        WindowWidget::draw(renderer);
+        Widget::draw(renderer);
     }
 }
 
@@ -568,6 +590,7 @@ GamePadWidget::GamePadWidget() {
     connect(ON_EXIT, [](Widget* sender){
         _game.gamepad().remove(sender->ptr());
     });
+    enableUpdate(true);
 }
 
 void GamePadWidget::sleep_gamepad(float seconds) {
@@ -638,6 +661,7 @@ void ImageWidget::onDraw(SDL_Renderer* renderer) {
 
 ButtonWidget::ButtonWidget():
 ImageWidget(nullptr),
+FingerResponder(this),
 _state(UNKNOWN),
 _enable(true) {
 
@@ -645,6 +669,7 @@ _enable(true) {
 
 ButtonWidget::ButtonWidget(TexturePtr const& normal, TexturePtr const& pressed, TexturePtr const& disabled):
 ImageWidget(normal),
+FingerResponder(this),
 _state(NORMAL),
 _enable(true) {
     setNormalTexture(normal);
@@ -700,8 +725,41 @@ void ButtonWidget::setState(State state) {
     if (_state == state) {
         return;
     }
+    auto size = this->size();
     setTexture(_texture[state]);
+    setSize(size);
     _state = state;
+}
+
+void ButtonWidget::onEnter() {
+    ImageWidget::onEnter();
+    _game.mouse().add(this);
+}
+
+void ButtonWidget::onExit() {
+    _game.mouse().remove(this);
+    ImageWidget::onExit();
+}
+
+bool ButtonWidget::onTouchBegen(Vector2i const& point) {
+    if (!_enable) {
+        return false;
+    }
+    setState(PRESSED);
+    return true;
+}
+
+void ButtonWidget::onTouchEnded(Vector2i const& point) {
+    setState(NORMAL);
+    if (point.x > 0 and point.x < _global_size.x and point.y > 0 and point.y < _global_size.y) {
+        if (_callback != nullptr) {
+            _callback(this);
+        }
+    }
+}
+
+void ButtonWidget::onTouchMoved(Vector2i const& point) {
+
 }
 
 //=====================================================================================

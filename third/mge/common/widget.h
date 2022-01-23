@@ -12,9 +12,9 @@
 #include <string>
 #include <SDL.h>
 #include "gamepad.h"
-#include "mouse.h"
 #include "event.h"
 #include "observer.h"
+#include "finger_responder.h"
 
 mge_begin
 
@@ -68,6 +68,9 @@ public:
     void enableClip(bool clip);
     void setVisible(bool visible);
     void performLayout();
+public:
+    bool isTouchEnabled() const;
+    void setTouchEnable(bool b);
 public:
     virtual void addChild(WidgetPtr const& widget);
     virtual void addChild(WidgetPtr const& widget, int index);
@@ -151,6 +154,7 @@ protected:
     bool _visible;
     bool _update;
     bool _clip;
+    bool _touchEnable;
     bool _pause_action_when_hidden;
     bool _dirty;
     unsigned char _opacity;
@@ -169,6 +173,11 @@ protected:
     SignalPool _signal_pool;
 };
 
+class LayerWidget : public Widget, public FingerResponder {
+public:
+    LayerWidget();
+};
+
 class WindowWidget : public Widget {
 public:
     WindowWidget();
@@ -176,7 +185,7 @@ public:
 
 class Texture;
 class RenderCopyEx;
-class RenderTargetWidget : public WindowWidget {
+class RenderTargetWidget : public Widget {
 public:
     typedef std::shared_ptr<Texture> TexturePtr;
     typedef RenderCopyEx Render;
@@ -193,7 +202,7 @@ protected:
     RenderPtr _render;
 };
 
-class GamePadWidget : public WindowWidget {
+class GamePadWidget : public LayerWidget {
 public:
     typedef GamePad::KeyCode KeyCode;
 public:
@@ -227,7 +236,7 @@ private:
     RenderPtr _target;
 };
 
-class ButtonWidget : public ImageWidget {
+class ButtonWidget : public ImageWidget, public FingerResponder {
 public:
     typedef std::function<void(Widget*)> CallBack;
     typedef std::shared_ptr<Texture> TexturePtr;
@@ -252,6 +261,12 @@ public:
     void setSelector(CallBack const& cb);
     void click();
     void setState(State state);
+private:
+    void onEnter() override;
+    void onExit() override;
+    bool onTouchBegen(Vector2i const& point) override;
+    void onTouchEnded(Vector2i const& point) override;
+    void onTouchMoved(Vector2i const& point) override;
 private:
     bool _enable;
     State _state;

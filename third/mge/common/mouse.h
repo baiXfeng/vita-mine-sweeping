@@ -6,33 +6,22 @@
 #define SDL2_UI_MOUSE_H
 
 #include <list>
-#include <memory>
-#include <vector>
-#include <map>
-#include <unordered_map>
 #include <SDL.h>
 #include "macro.h"
 #include "vector2.h"
 
 mge_begin
 
-class Widget;
+class FingerResponder;
 class Mouse {
 public:
-    typedef std::shared_ptr<Widget> WidgetPtr;
-    typedef std::list<WidgetPtr> List;
-    enum Event {
-        FINGER_DOWN = 0,
-        FINGER_UP,
-        FINGER_MOTION,
-    };
+    typedef std::list<FingerResponder*> List;
 public:
     Mouse();
 public:
     void sleep(float seconds);
-    void add(WidgetPtr const& widget);
-    void remove(WidgetPtr const& widget);
-    void remove(Widget const* widget);
+    void add(FingerResponder* resp);
+    void remove(FingerResponder* resp);
     void onEvent(SDL_Event const& event);
 private:
     void onMouseEvent(SDL_Event const& event);
@@ -45,6 +34,8 @@ private:
     bool _sleep;
     bool _usefinger;
     bool _finger_downed;
+    FingerResponder* _current;
+    List _responder;
 };
 
 mge_end

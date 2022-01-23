@@ -6,10 +6,11 @@
 #include "game.h"
 #include "widget.h"
 #include "log.h"
+#include "finger_responder.h"
 
 mge_begin
 
-Mouse::Mouse():_finger_downed(false), _usefinger(false) {
+Mouse::Mouse():_finger_downed(false), _usefinger(false), _current(nullptr) {
 #if defined(__vita__)
     _usefinger = true;
 #endif
@@ -19,16 +20,25 @@ void Mouse::sleep(float seconds) {
 
 }
 
-void Mouse::add(WidgetPtr const& widget) {
-
+static uint32_t getLevel(Widget* widget) {
+    int ret = 1;
+    while ((widget = widget->parent()) and ++ret) {}
+    return ret;
 }
 
-void Mouse::remove(WidgetPtr const& widget) {
-
+void Mouse::add(FingerResponder* resp) {
+    this->remove(resp);
+    _responder.push_back(resp);
+    _responder.sort();
 }
 
-void Mouse::remove(Widget const* widget) {
-
+void Mouse::remove(FingerResponder* resp) {
+    if (auto iter = std::find(_responder.begin(), _responder.end(), resp); iter != _responder.end()) {
+        _responder.erase(iter);
+    }
+    if (resp == _current) {
+        _current = nullptr;
+    }
 }
 
 void Mouse::onEvent(SDL_Event const& event) {
@@ -46,9 +56,7 @@ void Mouse::onMouseEvent(SDL_Event const& event) {
             onFingerUp({event.button.x, event.button.y});
             break;
         case SDL_MOUSEMOTION:
-            if (_finger_downed) {
-                onFingerMotion({event.button.x, event.button.y});
-            }
+            _finger_downed ? onFingerMotion({event.button.x, event.button.y}) : void();
             break;
         default:
             break;
@@ -88,15 +96,44 @@ void Mouse::onFingerEvent(SDL_Event const& event) {
 }
 
 void Mouse::onFingerDown(Vector2i const& point) {
-    LOG("鼠标按下: %d, %d\n", point.x, point.y);
+    //LOG("鼠标按下: %d, %d\n", point.x, point.y);
+    for (auto iter = _responder.rbegin(); iter != _responder.rend(); iter++) {
+        if (auto resp = *iter; resp) {
+            if (auto widget = resp->owner(); widget) {
+                if (!widget->visible() or !widget->isTouchEnabled()) {
+                    continue;
+                }
+                auto& position = widget->global_position();
+                auto& size = widget->global_size();
+                if (point.x > (int)position.x and point.x < int(position.x + size.x) and
+                    point.y > (int)position.y and point.y < int(position.y + size.y)) {
+                    if (resp->onTouchBegen(point - position.to<int>())) {
+                        _current = resp;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    _current = nullptr;
 }
 
 void Mouse::onFingerUp(Vector2i const& point) {
-    LOG("鼠标弹起: %d, %d\n", point.x, point.y);
+    //LOG("鼠标弹起: %d, %d\n", point.x, point.y);
+    if (_current) {
+        if (auto widget = _current->owner(); widget) {
+            _current->onTouchEnded(point - widget->global_position().to<int>());
+        }
+    }
 }
 
 void Mouse::onFingerMotion(Vector2i const& point) {
-    LOG("鼠标移动: %d, %d\n", point.x, point.y);
+    //LOG("鼠标移动: %d, %d\n", point.x, point.y);
+    if (_current) {
+        if (auto widget = _current->owner(); widget) {
+            _current->onTouchMoved(point - widget->global_position().to<int>());
+        }
+    }
 }
 
 mge_end
