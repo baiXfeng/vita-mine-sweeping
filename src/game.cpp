@@ -31,19 +31,18 @@ GameView::Selector GameView::onResolveSelector(mge::Widget* target, const char* 
 
 void GameView::onLayoutLoaded() {
     addChild(Ptr(_play = new PlayGame(_c)), 0);
-    _c.map.resize(10, 10);
-    _play->grid()->reload_data();
     auto camera = _play->grid()->getCamera();
     auto layer_size = _play->grid()->getLayer(0)->size();
     camera->setCameraPosition((layer_size - size()) * 0.5f);
 }
 
 void GameView::onOption(Widget* sender) {
-
+    printf("设置\n");
+    _play->restart();
 }
 
 void GameView::onRestart(Widget* sender) {
-
+    printf("重新开始\n");
 }
 
 void GameView::onButtonDown(int key) {

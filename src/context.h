@@ -10,7 +10,11 @@
 
 class Context {
 public:
-    mge::Grid<Tile> map;
+    Context() {
+        flag = false;
+    }
+    bool flag;  // 标旗模式
+    mge::Grid<Tile> grid;
 };
 
 #endif //SDL2_UI_CONTEXT_H

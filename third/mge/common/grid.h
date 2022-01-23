@@ -7,6 +7,7 @@
 
 #include "macro.h"
 #include "vector2.h"
+#include <vector>
 
 mge_begin
 

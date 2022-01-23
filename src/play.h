@@ -9,11 +9,17 @@
 #include "common/gridmap.h"
 
 class Context;
-class PlayGame : public mge::WindowWidget, protected mge::GridMapDataSource {
+class Tile;
+class PlayGame : public mge::LayerWidget, protected mge::GridMapDataSource {
 public:
     PlayGame(Context& c);
 public:
     mge::GridMapWidget* grid() const;
+    void restart();
+private:
+    bool onTouchBegen(mge::Vector2i const& point) override;
+    void onTouchEnded(mge::Vector2i const& point) override;
+    void onTouchMoved(mge::Vector2i const& point) override;
 private:
     size_t numberOfLayersInWidget(mge::GridMapWidget* sender) override;
     mge::Vector2i sizeOfGridMap(mge::GridMapWidget* sender) override;
@@ -22,6 +28,7 @@ private:
 private:
     Context* ctx;
     mge::GridMapWidget* _gridlayer;
+    Tile* _tile;
 };
 
 #endif //SDL2_UI_PLAY_H

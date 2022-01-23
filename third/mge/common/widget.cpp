@@ -616,6 +616,9 @@ void ImageWidget::setTexture(TexturePtr const& texture) {
         setSize(0.0f, 0.0f);
         return;
     }
+    if (_target->texture().get() == texture.get()) {
+        return;
+    }
     _target->setTexture(texture);
     this->setSize(_target->size().to<float>());
 }
