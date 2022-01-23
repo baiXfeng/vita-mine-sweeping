@@ -4,14 +4,16 @@
 
 #include "logic.h"
 #include "context.h"
-#include "tile.h"
+#include "common/game.h"
+#include "common/event.h"
 #include <list>
 
 bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_mine) {
 
     assert(number_of_mine < mapSize.x * mapSize.y && "restart_game fail.");
 
-    c.flag = false;
+    srand(time(nullptr));
+
     c.grid.resize(mapSize, {});
     for (int i = 0; i < c.grid.cells().size(); ++i) {
         auto& cell = c.grid.cells()[i];
@@ -74,6 +76,19 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
         }
     }
 
+    // 游戏开始通知
+    _game.event().notify(mge::Event(EVENT_ID::GAME_START));
+
+    // 更新游戏时间显示
+    c.seconds = 0.0f;
+    c.notify(&ContextObserver::onTimeModify, c.seconds);
+
+    // 更新地雷数量显示
+    c.max_mine_number = number_of_mine;
+    c.mine_number = number_of_mine;
+    c.notify(&ContextObserver::onMineNumberModify, c.mine_number);
+
+    c.flag = false;
     return true;
 }
 
@@ -85,29 +100,77 @@ bool click_tile(Context& c, mge::Vector2i const& position) {
 
     auto& cell = c.grid.get(position);
 
+    if (cell.flag_on) {
+        if (c.flag) {
+            return set_flag(c, position);
+        }
+        return true;
+    }
+
     if (cell.hidden) {
+        if (c.flag) {
+            return set_flag(c, position);
+        }
         return open_tile(c, position);
     }
 
-    if (cell.flag and *cell.flag) {
+    if (cell.number >= 1) {
         return auto_clear(c, position);
     }
 
     return false;
 }
 
+class CheckWin {
+public:
+    CheckWin(Context& c):ctx(c) {}
+    ~CheckWin() {
+        check();
+    }
+private:
+    void check() {
+        int hidden_number = 0;
+        std::vector<Tile*> mine_array;
+        for (auto& cell : ctx.grid.cells()) {
+            if (cell.hidden) {
+                hidden_number++;
+            }
+            if (cell.is_mine) {
+                mine_array.emplace_back(&cell);
+            }
+        }
+        if (hidden_number == ctx.max_mine_number) {
+            for (auto cell : mine_array) {
+                cell->flag_on = true;
+            }
+            ctx.mine_number = 0;
+            ctx.notify(&ContextObserver::onMineNumberModify, ctx.mine_number);
+            _game.event().notify(EVENT_ID::GAME_WIN);
+        }
+    }
+    Context& ctx;
+};
+
 bool open_tile(Context& c, mge::Vector2i const& position) {
 
     auto& cell = c.grid.get(position);
 
+    if (cell.flag_on) {
+        return true;
+    }
+
     if (cell.number >= 1) {
+        CheckWin check(c);
         cell.hidden = false;
         return true;
     }
 
     if (cell.is_mine) {
         // 点中地雷，游戏结束
-        printf("点中地雷.\n");
+        cell.bomb = true;
+        cell.hidden = false;
+        clear_all_mine(c);
+        _game.event().notify(mge::Event(EVENT_ID::GAME_OVER));
         return true;
     }
 
@@ -115,7 +178,44 @@ bool open_tile(Context& c, mge::Vector2i const& position) {
 }
 
 bool auto_clear(Context& c, mge::Vector2i const& position) {
-    return false;
+
+    mge::Vector2i offset[8] = {
+            {0, -1},
+            {1, 0},
+            {0, 1},
+            {-1, 0},
+            {-1, -1},
+            {1, -1},
+            {-1, 1},
+            {1, 1},
+    };
+
+    int mine_number = 0;
+    for (int i = 0; i < 8; ++i) {
+        auto pos = position + offset[i];
+        if (c.grid.is_out_of_range(pos)) {
+            continue;
+        }
+        auto& cell = c.grid.get(pos);
+        mine_number += cell.flag_on ? 1 : 0;
+    }
+
+    // 旗子数量与数字提示数量不相符，不能自动消除
+    auto& cell = c.grid.get(position);
+    if (mine_number != cell.number) {
+        return false;
+    }
+
+    // 翻开周边块
+    for (int i = 0; i < 8; ++i) {
+        auto pos = position + offset[i];
+        if (c.grid.is_out_of_range(pos)) {
+            continue;
+        }
+        open_tile(c, pos);
+    }
+
+    return true;
 }
 
 class AStarClearEmpty {
@@ -216,7 +316,41 @@ private:
 };
 
 bool clear_empty(Context& c, mge::Vector2i const& position) {
+    CheckWin check(c);
     AStarClearEmpty ce(c);
     ce.clear(position);
+    return true;
+}
+
+bool set_flag(Context& c, mge::Vector2i const& position) {
+
+    auto& cell = c.grid.get(position);
+    cell.flag_on = !cell.flag_on;
+
+    if (cell.flag_on) {
+        c.mine_number--;
+    } else {
+        c.mine_number++;
+    }
+    c.notify(&ContextObserver::onMineNumberModify, c.mine_number);
+
+    return true;
+}
+
+bool clear_all_mine(Context& c) {
+    for (auto& cell : c.grid.cells()) {
+        if (!cell.hidden) {
+            continue;
+        }
+        if (!cell.is_mine and cell.flag_on) {
+            // 标记错了地雷
+            cell.flag_wrong = true;
+            continue;
+        }
+        if (cell.is_mine and !cell.flag_on) {
+            cell.hidden = false;
+            continue;
+        }
+    }
     return true;
 }

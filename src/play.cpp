@@ -31,7 +31,11 @@ public:
     MineTileCell():_icon(nullptr) {
         addChild(Ptr(_icon = new ImageWidget));
         _base = res::load_texture("assets/images/tile_base.png");
+        _flag = res::load_texture("assets/images/tile_f.png");
+        _flag_on = res::load_texture("assets/images/tile_d.png");
         _mine = res::load_texture("assets/images/tile_b2.png");
+        _bomb = res::load_texture("assets/images/tile_b.png");
+        _wrong = res::load_texture("assets/images/tile_b3.png");
         for (int i = 0; i < 8; ++i) {
             char temp[80] = {0};
             sprintf(temp, "assets/images/tile_%d.png", i+1);
@@ -49,13 +53,26 @@ public:
         auto texture = _base;
         set.setTexture(texture);
         if (_data->hidden) {
-            // 未翻开
+            if (_data->flag_wrong) {
+                set.setTexture(_wrong);
+                return;
+            } else if (_data->flag_on) {
+                set.setTexture(_flag_on);
+                return;
+            } else if (_data->flag and *_data->flag) {
+                set.setTexture(_flag);
+                return;
+            }
             set.setTexture(_btn[_data->pressed ? 1 : 0]);
             return;
         }
         if (_data->number >= 1) {
             set.setTexture(_number[ _data->number - 1 ]);
         } else if (_data->is_mine) {
+            if (_data->bomb) {
+                set.setTexture(_bomb);
+                return;
+            }
             set.setTexture(_mine);
         }
     }
@@ -66,6 +83,10 @@ private:
     Texture::Ptr _mine;
     Texture::Ptr _number[8];
     Texture::Ptr _btn[2];
+    Texture::Ptr _flag;
+    Texture::Ptr _flag_on;
+    Texture::Ptr _bomb;
+    Texture::Ptr _wrong;
 };
 
 #define TILE_SIZE 40
@@ -78,6 +99,11 @@ PlayGame::PlayGame(Context& c):ctx(&c), _gridlayer(new GridMapWidget), _tile(nul
 
 bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
     auto position = point + _gridlayer->getCamera()->getCameraPosition().to<int>();
+    auto size = _gridlayer->getLayer(0)->size().to<int>();
+    RectI bound{0, 0, size.x, size.y};
+    if (!bound.contain(position)) {
+        return false;
+    }
     int x = position.x / TILE_SIZE;
     int y = position.y / TILE_SIZE;
     if (ctx->grid.is_out_of_range(x, y)) {
@@ -97,6 +123,11 @@ void PlayGame::onTouchEnded(mge::Vector2i const& point) {
         auto position = point + _gridlayer->getCamera()->getCameraPosition().to<int>();
         int x = position.x / TILE_SIZE;
         int y = position.y / TILE_SIZE;
+
+        if (ctx->grid.is_out_of_range(x, y)) {
+            return;
+        }
+
         click_tile(*ctx, {x, y});
     }
 }
@@ -109,6 +140,8 @@ void PlayGame::onTouchMoved(mge::Vector2i const& point) {
     int x = position.x / TILE_SIZE;
     int y = position.y / TILE_SIZE;
     if (ctx->grid.is_out_of_range(x, y)) {
+        _tile->pressed = false;
+        _tile = nullptr;
         return;
     }
     auto& cell = ctx->grid.get(x, y);

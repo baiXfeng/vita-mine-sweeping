@@ -7,9 +7,21 @@
 #include "common/widget.h"
 #include "play.h"
 
-GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
+GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr), _game_finished(false) {
     memset(_smile, 0, sizeof(_smile));
     _game.setRenderColor({18, 103, 72, 255});
+
+    connect(ON_ENTER, [this](mge::Widget* sender){
+        _game.event().add(EVENT_ID::GAME_OVER, this);
+        _game.event().add(EVENT_ID::GAME_START, this);
+        _game.event().add(EVENT_ID::GAME_WIN, this);
+    });
+    connect(ON_EXIT, [this](mge::Widget* sender){
+        _game.event().remove(EVENT_ID::GAME_OVER, this);
+        _game.event().remove(EVENT_ID::GAME_START, this);
+        _game.event().remove(EVENT_ID::GAME_WIN, this);
+    });
+    _c.add(this);
 }
 
 bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
@@ -33,20 +45,61 @@ void GameView::onLayoutLoaded() {
     addChild(Ptr(_play = new PlayGame(_c)), 0);
     auto camera = _play->grid()->getCamera();
     auto layer_size = _play->grid()->getLayer(0)->size();
-    camera->setCameraPosition((layer_size - size()) * 0.5f);
+    camera->setCameraPosition((layer_size - size()) * mge::Vector2f{0.5f, 0.65f});
+}
+
+void GameView::onUpdate(float delta) {
+    if (!_game_finished) {
+        _c.seconds += delta;
+        _c.notify(&ContextObserver::onTimeModify, _c.seconds);
+    }
 }
 
 void GameView::onOption(Widget* sender) {
-    printf("设置\n");
-    _play->restart();
+
 }
 
 void GameView::onRestart(Widget* sender) {
-    printf("重新开始\n");
+    _play->restart();
 }
 
 void GameView::onButtonDown(int key) {
     if (key == KeyCode::B) {
         _game.screen().pop();
+    } else if (key == KeyCode::L1 or key == KeyCode::R1) {
+        _c.flag = !_c.flag;
+    }
+}
+
+void GameView::onEvent(mge::Event const& e) {
+    if (e.Id() == EVENT_ID::GAME_OVER) {
+        this->setFaceState(1);
+        _play->setTouchEnable(false);
+        _game_finished = true;
+    } else if (e.Id() == EVENT_ID::GAME_START) {
+        this->setFaceState(0);
+        _play->setTouchEnable(true);
+        _game_finished = false;
+    } else if (e.Id() == EVENT_ID::GAME_WIN) {
+        this->setFaceState(2);
+        _play->setTouchEnable(false);
+        _game_finished = true;
+    }
+}
+
+void GameView::onTimeModify(float seconds) {
+    uint32_t value = int(seconds);
+    char temp[80] = {0};
+    sprintf(temp, "%02d:%02d", int(value / 60), value % 60);
+    _time->setString(temp);
+}
+
+void GameView::onMineNumberModify(uint32_t number) {
+    _mine->setString(std::to_string(number));
+}
+
+void GameView::setFaceState(int state) {
+    for (int i = 0; i < 3; ++i) {
+        _smile[i]->setVisible(state == i ? true : false);
     }
 }

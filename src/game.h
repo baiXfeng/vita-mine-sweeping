@@ -10,7 +10,11 @@
 #include "context.h"
 
 class PlayGame;
-class GameView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutSelectorAssigner, public ui::LayoutNodeListener {
+class GameView : public mge::GamePadWidget,
+        public ui::LayoutVariableAssigner,
+        public ui::LayoutSelectorAssigner,
+        public ui::LayoutNodeListener,
+        public ContextObserver {
 public:
     GameView();
 private:
@@ -18,9 +22,17 @@ private:
     Selector onResolveSelector(mge::Widget* target, const char* name) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
+    void onEvent(mge::Event const& e) override;
+    void onUpdate(float delta) override;
     void onOption(Widget* sender);
     void onRestart(Widget* sender);
 private:
+    void onTimeModify(float seconds) override;
+    void onMineNumberModify(uint32_t number) override;
+private:
+    void setFaceState(int state);
+private:
+    bool _game_finished;
     Context _c;
     mge::ButtonWidget* _smile[3];
     mge::TTFLabel* _time;
