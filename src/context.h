@@ -21,12 +21,16 @@ public:
     Context() {
         flag = false;
         finished = false;
+        paused = false;
+        first_click = true;
         mine_number = 0;
         max_mine_number = 0;
         seconds = 0.0f;
     }
     bool flag;      // 标旗模式
     bool finished;  // 游戏结束
+    bool paused;    // 游戏暂停
+    bool first_click;   // 首次点击
     uint32_t mine_number;   // 剩余地雷数量
     uint32_t max_mine_number;   // 地雷总数
     float seconds;  // 游戏时间

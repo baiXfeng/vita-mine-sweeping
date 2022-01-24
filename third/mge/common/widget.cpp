@@ -427,6 +427,10 @@ void Widget::setScale(float x, float y) {
     this->onModifyScale(_scale);
 }
 
+void Widget::setScale(float scale) {
+    setScale(scale, scale);
+}
+
 Vector2f const& Widget::scale() const {
     return _scale;
 }
@@ -715,12 +719,12 @@ bool ButtonWidget::pressed() const {
 }
 
 void ButtonWidget::setSelector(CallBack const& cb) {
-    _callback = cb;
+    _selector = cb;
 }
 
 void ButtonWidget::click() {
-    if (_enable and _callback != nullptr) {
-        _callback(this);
+    if (_enable and _selector != nullptr) {
+        _selector(this);
     }
 }
 
@@ -755,14 +759,144 @@ bool ButtonWidget::onTouchBegen(Vector2i const& point) {
 void ButtonWidget::onTouchEnded(Vector2i const& point) {
     setState(NORMAL);
     if (point.x > 0 and point.x < _global_size.x and point.y > 0 and point.y < _global_size.y) {
-        if (_callback != nullptr) {
-            _callback(this);
+        if (_selector != nullptr) {
+            _selector(this);
         }
     }
 }
 
 void ButtonWidget::onTouchMoved(Vector2i const& point) {
 
+}
+
+//=====================================================================================
+
+ProgressBarWidget::ProgressBarWidget():_value(1.0f), _clipBox(new Widget) {
+    addChild(Ptr(_clipBox));
+    _clipBox->enableClip(true);
+    memset(_image, 0, sizeof(_image));
+}
+
+ProgressBarWidget::ProgressBarWidget(TexturePtr const& bg, TexturePtr const& fg, TexturePtr const& selector):
+_value(1.0f),
+_clipBox(new Widget) {
+    addChild(Ptr(_clipBox));
+    _clipBox->enableClip(true);
+    memset(_image, 0, sizeof(_image));
+    setBgTexture(bg);
+    setBarTexture(fg);
+    setDotTexture(selector);
+}
+
+void ProgressBarWidget::setBgTexture(TexturePtr const& bg) {
+    if (auto view = _image[0]; view == nullptr) {
+        _image[0] = new ImageWidget(bg);
+        addChild(Ptr(_image[0]), 0);
+        setSize(_image[0]->size());
+    } else {
+        _image[0]->setTexture(bg);
+    }
+    _image[0]->setSize(size());
+}
+
+void ProgressBarWidget::setBarTexture(TexturePtr const& fg) {
+    if (auto view = _image[1]; view == nullptr) {
+        _image[1] = new ImageWidget(fg);
+        _clipBox->addChild(Ptr(_image[1]));
+    } else {
+        _image[1]->setTexture(fg);
+    }
+    _image[1]->setSize(size());
+}
+
+void ProgressBarWidget::setDotTexture(TexturePtr const& selector) {
+    if (auto view = _image[2]; view == nullptr) {
+        _image[2] = new ImageWidget(selector);
+        _image[2]->setAnchor(0.5f, 0.5f);
+        addChild(Ptr(_image[2]));
+    } else {
+        _image[2]->setTexture(selector);
+    }
+    _image[2]->setPosition({size().x * _value, size().y * 0.5f});
+}
+
+void ProgressBarWidget::setSelector(CallBack const& cb) {
+    _selector = cb;
+}
+
+void ProgressBarWidget::setValue(float value) {
+    _value = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+    if (int(_value * 1000) <= 10) {
+        _clipBox->setVisible(false);
+    } else {
+        _clipBox->setSize({size().x * _value, size().y});
+        _clipBox->setVisible(true);
+    }
+    if (auto selector = _image[2]; selector) {
+        selector->setPosition({global_size().x * _value, global_size().y * 0.5f});
+    }
+}
+
+float ProgressBarWidget::value() const {
+    return _value;
+}
+
+void ProgressBarWidget::onEnter() {
+    LayerWidget::onEnter();
+    setSize(size());
+    setScale(scale());
+    performLayout();
+    setValue(_value);
+}
+
+void ProgressBarWidget::onModifyScale(Vector2f const& scale) {
+    for (int i = 0; i < 3; ++i) {
+        if (_image[i]) {
+            _image[i]->setScale(scale);
+        }
+    }
+    _clipBox->setScale(scale);
+    setValue(_value);
+}
+
+void ProgressBarWidget::onModifySize(Vector2f const& size) {
+    for (int i = 0; i < 2; ++i) {
+        if (_image[i]) {
+            _image[i]->setSize(size);
+        }
+    }
+    _clipBox->setSize(size);
+    if (_image[0] and _image[2]) {
+        if (auto texture0 = _image[0]->getTexture(); texture0.get()) {
+            if (auto texture1 = _image[2]->getTexture(); texture1.get()) {
+                auto scale = size / texture0->size().to<float>();
+                _image[2]->setSize(scale * texture1->size().to<float>());
+            }
+        }
+    }
+    setValue(_value);
+}
+
+bool ProgressBarWidget::onTouchBegen(Vector2i const& point) {
+    setValue(point.x / global_size().x);
+    if (_selector != nullptr) {
+        _selector(this, BEGEN);
+    }
+    return true;
+}
+
+void ProgressBarWidget::onTouchMoved(Vector2i const& point) {
+    setValue(point.x / global_size().x);
+    if (_selector != nullptr) {
+        _selector(this, MOVED);
+    }
+}
+
+void ProgressBarWidget::onTouchEnded(Vector2i const& point) {
+    setValue(point.x / global_size().x);
+    if (_selector != nullptr) {
+        _selector(this, ENDED);
+    }
 }
 
 //=====================================================================================
@@ -790,7 +924,16 @@ void MaskWidget::onDraw(SDL_Renderer* renderer) {
     };
     _color.a = _opacity;
     dc.setColor(_color);
-    SDL_RenderFillRectF(renderer, &dst);
+
+    if (auto render_target = SDL_GetRenderTarget(renderer); render_target) {
+        SDL_BlendMode blend_mode;
+        SDL_GetRenderDrawBlendMode(renderer, &blend_mode);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        SDL_RenderFillRectF(renderer, &dst);
+        SDL_SetRenderDrawBlendMode(renderer, blend_mode);
+    } else {
+        SDL_RenderFillRectF(renderer, &dst);
+    }
 }
 
 MaskBoxWidget::MaskBoxWidget(SDL_Color const& c):MaskWidget(c) {}
@@ -805,7 +948,16 @@ void MaskBoxWidget::onDraw(SDL_Renderer* renderer) {
     };
     _color.a = _opacity;
     dc.setColor(_color);
-    SDL_RenderDrawRectF(renderer, &dst);
+
+    if (auto render_target = SDL_GetRenderTarget(renderer); render_target) {
+        SDL_BlendMode blend_mode;
+        SDL_GetRenderDrawBlendMode(renderer, &blend_mode);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        SDL_RenderDrawRectF(renderer, &dst);
+        SDL_SetRenderDrawBlendMode(renderer, blend_mode);
+    } else {
+        SDL_RenderDrawRectF(renderer, &dst);
+    }
 }
 
 //=====================================================================================

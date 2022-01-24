@@ -18,8 +18,8 @@ public:
     virtual bool onTouchBegen(Vector2i const& point) {
         return false;
     }
-    virtual void onTouchEnded(Vector2i const& point) {}
     virtual void onTouchMoved(Vector2i const& point) {}
+    virtual void onTouchEnded(Vector2i const& point) {}
     virtual uint32_t getLayerIndex() const;
     bool operator > (FingerResponder& f) {
         return getLayerIndex() > f.getLayerIndex();

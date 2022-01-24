@@ -94,7 +94,6 @@ private:
 PlayGame::PlayGame(Context& c):ctx(&c), _gridlayer(new GridMapWidget), _tile(nullptr) {
     _gridlayer->setDataSource(this);
     addChild(Ptr(_gridlayer));
-    restart();
 }
 
 bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
@@ -156,7 +155,7 @@ mge::GridMapWidget* PlayGame::grid() const {
 }
 
 void PlayGame::restart() {
-    restart_game(*ctx, {10, 10}, 5);
+    restart_game(*ctx, {11, 11}, 20);
     _gridlayer->reload_data();
 }
 

@@ -129,6 +129,7 @@ public:
 public:
     void setScale(Vector2f const& scale);
     void setScale(float sx, float sy);
+    void setScale(float scale);
     Vector2f const& scale() const;
     virtual void onModifyScale(Vector2f const& scale);
 public:
@@ -185,16 +186,17 @@ public:
 
 class Texture;
 class RenderCopyEx;
-class RenderTargetWidget : public Widget {
+class RenderTargetWidget : public WindowWidget {
 public:
     typedef std::shared_ptr<Texture> TexturePtr;
     typedef RenderCopyEx Render;
     typedef std::shared_ptr<Render> RenderPtr;
 public:
+    RenderTargetWidget();
+public:
     void setRenderTargetSize(Vector2i const& size);
     void setRenderTargetNull();
 protected:
-    RenderTargetWidget();
     void draw(SDL_Renderer* renderer) override;
     void drawRenderTarget(SDL_Renderer* renderer);
 protected:
@@ -270,8 +272,42 @@ private:
 private:
     bool _enable;
     State _state;
-    CallBack _callback;
+    CallBack _selector;
     TexturePtr _texture[3];
+};
+
+class ProgressBarWidget : public LayerWidget {
+public:
+    enum State {
+        BEGEN = 1,
+        MOVED = 2,
+        ENDED = 3,
+    };
+    typedef std::function<void(Widget*, int)> CallBack;
+    typedef std::shared_ptr<Texture> TexturePtr;
+public:
+    ProgressBarWidget();
+    ProgressBarWidget(TexturePtr const& bg, TexturePtr const& fg, TexturePtr const& selector = nullptr);
+public:
+    void setBgTexture(TexturePtr const& bg);
+    void setBarTexture(TexturePtr const& fg);
+    void setDotTexture(TexturePtr const& selector);
+    void setSelector(CallBack const& cb);
+public:
+    void setValue(float value);
+    float value() const;
+protected:
+    void onEnter() override;
+    void onModifyScale(Vector2f const& scale) override;
+    void onModifySize(Vector2f const& size) override;
+    bool onTouchBegen(Vector2i const& point) override;
+    void onTouchMoved(Vector2i const& point) override;
+    void onTouchEnded(Vector2i const& point) override;
+protected:
+    float _value;
+    Widget* _clipBox;
+    ImageWidget* _image[3];
+    CallBack _selector;
 };
 
 class MaskWidget : public Widget {

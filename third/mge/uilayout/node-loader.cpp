@@ -192,4 +192,24 @@ namespace ui {
             NodeLoader::onParseProperty(node, parent, reader, name, value);
         }
     }
+
+    Node ProgressBarWidgetLoader::createNode(mge::Widget* parent, LayoutReader* reader) {
+        return Node(new mge::ProgressBarWidget);
+    }
+
+    void ProgressBarWidgetLoader::onParseProperty(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value) {
+        if (strcmp(name, "Bg") == 0) {
+            node->fast_to<ProgressBarWidget>()->setBgTexture(res::load_texture(value));
+        } else if (strcmp(name, "Bar") == 0) {
+            node->fast_to<ProgressBarWidget>()->setBarTexture(res::load_texture(value));
+        } else if (strcmp(name, "Dot") == 0) {
+            node->fast_to<ProgressBarWidget>()->setDotTexture(res::load_texture(value));
+        } else {
+            NodeLoader::onParseProperty(node, parent, reader, name, value);
+        }
+    }
+
+    Node RenderTargetWidgetLoader::createNode(mge::Widget* parent, LayoutReader* reader) {
+        return Node(new mge::RenderTargetWidget);
+    }
 }

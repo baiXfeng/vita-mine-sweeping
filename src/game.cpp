@@ -8,6 +8,7 @@
 #include "common/xml_layout.h"
 #include "play.h"
 #include "gameover.h"
+#include "option.h"
 
 GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
     memset(_smile, 0, sizeof(_smile));
@@ -45,20 +46,24 @@ GameView::Selector GameView::onResolveSelector(mge::Widget* target, const char* 
 
 void GameView::onLayoutLoaded() {
     addChild(Ptr(_play = new PlayGame(_c)), 0);
-    auto camera = _play->grid()->getCamera();
+
+    _play->restart();
     auto layer_size = _play->grid()->getLayer(0)->size();
-    camera->setCameraPosition((layer_size - size()) * 0.5f);
+    auto camera = _play->grid()->getCamera();
+    camera->follow(layer_size * 0.5f);
 }
 
 void GameView::onUpdate(float delta) {
-    if (!_c.finished) {
+    if (!_c.finished and !_c.paused) {
         _c.seconds += delta;
         _c.notify(&ContextObserver::onTimeModify, _c.seconds);
     }
 }
 
 void GameView::onOption(Widget* sender) {
-
+    auto view = _game.uilayout().readNode("assets/layouts/option.xml");
+    view->fast_to<OptionView>()->setContext(_c);
+    addChild(view);
 }
 
 void GameView::onRestart(Widget* sender) {
@@ -77,14 +82,11 @@ void GameView::onEvent(mge::Event const& e) {
     if (e.Id() == EVENT_ID::GAME_OVER) {
         this->setFaceState(1);
         this->addGameOver("GAME OVER!");
-        _play->setTouchEnable(false);
     } else if (e.Id() == EVENT_ID::GAME_START) {
         this->setFaceState(0);
-        _play->setTouchEnable(true);
     } else if (e.Id() == EVENT_ID::GAME_WIN) {
         this->setFaceState(2);
         this->addGameOver("YOU WIN!");
-        _play->setTouchEnable(false);
     }
 }
 
@@ -96,7 +98,7 @@ void GameView::onTimeModify(float seconds) {
 }
 
 void GameView::onMineNumberModify(uint32_t number) {
-    _mine->setString(std::to_string(number));
+    _mine->setString(std::to_string(number > _c.max_mine_number ? 0 : number));
 }
 
 void GameView::setFaceState(int state) {

@@ -61,6 +61,15 @@ namespace ui {
         Node createNode(mge::Widget* parent, LayoutReader* reader) override;
         void onParseProperty(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value) override;
     };
+
+    class ProgressBarWidgetLoader : public NodeLoader {
+        Node createNode(mge::Widget* parent, LayoutReader* reader) override;
+        void onParseProperty(mge::Widget* node, mge::Widget* parent, LayoutReader* reader, const char* name, const char* value) override;
+    };
+
+    class RenderTargetWidgetLoader : public NodeLoader {
+        Node createNode(mge::Widget* parent, LayoutReader* reader) override;
+    };
 }
 
 #endif //SDL2_UI_NODE_LOADER_H

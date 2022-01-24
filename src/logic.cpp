@@ -90,6 +90,7 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
 
     c.flag = false;
     c.finished = false;
+    c.first_click = true;
     return true;
 }
 
@@ -109,9 +110,10 @@ bool click_tile(Context& c, mge::Vector2i const& position) {
     }
 
     if (cell.hidden) {
-        if (c.flag) {
+        if (c.flag and !c.first_click) {
             return set_flag(c, position);
         }
+        c.first_click = false;
         return open_tile(c, position);
     }
 
@@ -278,6 +280,12 @@ public:
                 }
                 if (auto& cell = ctx.grid.get(next_pos); cell.number >= 1) {
                     cell.hidden = false; // 数字直接翻开
+                    continue;
+                } else if (cell.hidden) {
+                    // 翻开隐藏的空白快
+                    if (!cell.is_mine and cell.number == 0) {
+                        open_tile(ctx, next_pos);
+                    }
                 }
             }
 
