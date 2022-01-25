@@ -8,6 +8,7 @@
 #include "widget.h"
 #include "grid.h"
 #include "rect.h"
+#include "observer.h"
 
 mge_begin
 
@@ -29,9 +30,9 @@ class GridMapDataSource {
 public:
     virtual ~GridMapDataSource() {}
 public:
-    virtual size_t numberOfLayersInWidget(GridMapWidget* sender) = 0;
-    virtual Vector2i sizeOfGridMap(GridMapWidget* sender) = 0;
-    virtual Vector2i sizeOfGridTile(GridMapWidget* sender) = 0;
+    virtual size_t numberOfLayersInWidget(GridMapWidget const* sender) = 0;
+    virtual Vector2i sizeOfGridMap(GridMapWidget const* sender) = 0;
+    virtual Vector2i sizeOfGridTile(GridMapWidget const* sender) = 0;
     virtual Widget::Ptr tileWidgetAtPosition(GridMapWidget* sender, int layerIndex, Vector2i const& position) = 0;
 };
 
@@ -77,29 +78,46 @@ public:
         MOVE_DOWN,
         MOVE_LEFT,
     };
+    struct Padding {
+        uint32_t top;
+        uint32_t right;
+        uint32_t bottom;
+        uint32_t left;
+    };
     typedef std::vector<MoveDirection> MoveDirs;
     GridMapCamera(Widget* container);
 public:
     void follow(Vector2f const& position);
     void move(Vector2f const& speed);
+    void move_offset(Vector2f const& offset);
     MoveDirs const& move_dirs() const;
     bool inCamera(RectI const& r) const;
     void setCameraPosition(Vector2f const& position);
     Vector2f getCameraPosition() const;
+    Vector2f getFollowPosition() const;
     void limitCamera();
+    void setPadding(Padding const& padding);
 protected:
     void onUpdate(float delta) override;
+    void update_dirs(Vector2f const& move);
+    void limit_with_dirs();
     void limitTop();
     void limitRight();
     void limitBottom();
     void limitLeft();
 protected:
+    bool _move;
     Widget* _container;
     Vector2f _speed;
     MoveDirs _moveDirs;
+    Padding _padding;
 };
 
 class GridMapWidget : public WindowWidget {
+public:
+    enum EVENT {
+        ON_DATA_RELOAD = 0xABEF3001,
+    };
 public:
     typedef GridMapDataSource DataSource;
 public:
@@ -109,6 +127,7 @@ public:
     DataSource* getDataSource() const;
     GridMapLayer* getLayer(int index) const;
     GridMapCamera* getCamera() const;
+    Vector2i getContainerSize() const;
 public:
     void reload_data();
     Widget::Ptr dequeueTile(int layer);

@@ -5,6 +5,8 @@
 #ifndef SDL2_UI_TILE_H
 #define SDL2_UI_TILE_H
 
+#include "common/vector2.h"
+
 class Tile {
 public:
     Tile() {
@@ -27,6 +29,7 @@ public:
     bool flag_on;       // 标记为炸弹
     bool bomb;          // 爆炸了
     bool flag_wrong;    // 地雷标记错误
+    mge::Vector2i position;
 };
 
 #endif //SDL2_UI_TILE_H

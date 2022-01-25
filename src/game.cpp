@@ -24,7 +24,7 @@ GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
         _game.event().remove(EVENT_ID::GAME_START, this);
         _game.event().remove(EVENT_ID::GAME_WIN, this);
     });
-    _c.add(this);
+    _c.state.add(this);
 }
 
 bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
@@ -46,35 +46,58 @@ GameView::Selector GameView::onResolveSelector(mge::Widget* target, const char* 
 
 void GameView::onLayoutLoaded() {
     addChild(Ptr(_play = new PlayGame(_c)), 0);
-
-    _play->restart();
-    auto layer_size = _play->grid()->getLayer(0)->size();
-    auto camera = _play->grid()->getCamera();
-    camera->follow(layer_size * 0.5f);
+    onRestart(this);
 }
 
 void GameView::onUpdate(float delta) {
-    if (!_c.finished and !_c.paused) {
-        _c.seconds += delta;
-        _c.notify(&ContextObserver::onTimeModify, _c.seconds);
+    if (!_c.state.finished and !_c.state.paused) {
+        _c.state.seconds += delta;
+        _c.state.notify_time();
     }
+    _play->grid()->getCamera()->move(_move);
 }
 
 void GameView::onOption(Widget* sender) {
     auto view = _game.uilayout().readNode("assets/layouts/option.xml");
-    view->fast_to<OptionView>()->setContext(_c);
+    if (auto option = view->to<OptionView>(); option) {
+        option->setContext(_c);
+    }
     addChild(view);
 }
 
 void GameView::onRestart(Widget* sender) {
     _play->restart();
+    auto layer_size = _play->grid()->getContainerSize();
+    auto camera = _play->grid()->getCamera();
+    camera->follow(layer_size.to<float>() * 0.5f);
+    _play->reload_data();
 }
 
 void GameView::onButtonDown(int key) {
     if (key == KeyCode::B) {
         _game.screen().pop();
     } else if (key == KeyCode::L1 or key == KeyCode::R1) {
-        _c.flag = !_c.flag;
+        _c.state.flag = !_c.state.flag;
+    } else if (KeyCode::UP == key) {
+        _move.y = -300;
+    } else if (KeyCode::DOWN == key) {
+        _move.y = 300;
+    } else if (KeyCode::LEFT == key) {
+        _move.x = -300;
+    } else if (KeyCode::RIGHT == key) {
+        _move.x = 300;
+    }
+}
+
+void GameView::onButtonUp(int key) {
+    if (KeyCode::UP == key) {
+        _move.y = 0;
+    } else if (KeyCode::DOWN == key) {
+        _move.y = 0;
+    } else if (KeyCode::LEFT == key) {
+        _move.x = 0;
+    } else if (KeyCode::RIGHT == key) {
+        _move.x = 0;
     }
 }
 
@@ -98,7 +121,7 @@ void GameView::onTimeModify(float seconds) {
 }
 
 void GameView::onMineNumberModify(uint32_t number) {
-    _mine->setString(std::to_string(number > _c.max_mine_number ? 0 : number));
+    _mine->setString(std::to_string(number > _c.state.max_mine_number ? 0 : number));
 }
 
 void GameView::setFaceState(int state) {

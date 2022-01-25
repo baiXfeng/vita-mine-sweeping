@@ -319,39 +319,54 @@ mge_begin
 
     //=====================================================================================
 
-    GridMapCamera::GridMapCamera(Widget* container):_container(container) {}
+    GridMapCamera::GridMapCamera(Widget* container):_container(container), _move(false), _padding({0, 0, 0, 0}) {}
 
     void GridMapCamera::onUpdate(float delta) {
-        _container->setPosition(_container->position() + _speed * delta);
+        if (_move) {
+            move_offset(_speed * delta);
+        }
+    }
+
+    void GridMapCamera::update_dirs(Vector2f const& move) {
         _moveDirs.clear();
-        int x = int(_speed.x);
+        int x = int(move.x);
         if (x >= 1) {
             _moveDirs.push_back(MOVE_LEFT);
-            limitLeft();
         } else if (x <= -1) {
             _moveDirs.push_back(MOVE_RIGHT);
-            limitRight();
         }
-        int y = int(_speed.y);
+        int y = int(move.y);
         if (y >= 1) {
             _moveDirs.push_back(MOVE_UP);
-            limitTop();
         } else if (y <= -1) {
             _moveDirs.push_back(MOVE_DOWN);
-            limitBottom();
         }
-        if (_moveDirs.size()) {
-            signal(DID_SCROLL)(this);
+    }
+
+    void GridMapCamera::limit_with_dirs() {
+        for (auto& dir : _moveDirs) {
+            if (dir == MOVE_LEFT) {
+                limitLeft();
+            } else if (dir == MOVE_RIGHT) {
+                limitRight();
+            } else if (dir == MOVE_UP) {
+                limitTop();
+            } else if (dir == MOVE_DOWN) {
+                limitBottom();
+            }
         }
     }
 
     void GridMapCamera::limitTop() {
         if (int(_container->size().y) > int(size().y)) {
-            if (_container->position().y >= 0.0f) {
-                _container->setPositionY(0.0f);
+            if (_container->position().y >= _padding.top) {
+                _container->setPositionY(_padding.top);
             }
         } else {
             int limit_y = size().y - _container->size().y;
+            if (limit_y <= _padding.top) {
+                limit_y = _padding.top;
+            }
             if (_container->position().y >= limit_y) {
                 _container->setPositionY(limit_y);
             }
@@ -360,12 +375,16 @@ mge_begin
 
     void GridMapCamera::limitRight() {
         if (int(_container->size().x) > int(size().x)) {
-            int limit_x = size().x - _container->size().x;
+            int limit_x = size().x - _container->size().x - _padding.right;
             if (_container->position().x <= limit_x) {
                 _container->setPositionX(limit_x);
             }
         } else {
-            if (_container->position().x <= 0.0f) {
+            if (int limit_x = size().x - _container->size().x - _padding.right; limit_x <= 0 and _padding.right != 0) {
+                if (_container->position().x <= limit_x) {
+                    _container->setPositionX(limit_x);
+                }
+            } else if (_container->position().x <= 0.0f) {
                 _container->setPositionX(0.0f);
             }
         }
@@ -373,12 +392,16 @@ mge_begin
 
     void GridMapCamera::limitBottom() {
         if (int(_container->size().y) > int(size().y)) {
-            int limit_y = size().y - _container->size().y;
+            int limit_y = size().y - _container->size().y - _padding.bottom;
             if (_container->position().y <= limit_y) {
                 _container->setPositionY(limit_y);
             }
         } else {
-            if (_container->position().y <= 0.0f) {
+            if (int limit_y = size().y - _container->size().y - _padding.bottom; limit_y <= 0 and _padding.bottom != 0) {
+                if (_container->position().y <= limit_y) {
+                    _container->setPositionY(limit_y);
+                }
+            } else if (_container->position().y <= 0.0f) {
                 _container->setPositionY(0.0f);
             }
         }
@@ -386,11 +409,14 @@ mge_begin
 
     void GridMapCamera::limitLeft() {
         if (int(_container->size().x) > int(size().x)) {
-            if (_container->position().x >= 0.0f) {
-                _container->setPositionX(0.0f);
+            if (_container->position().x >= _padding.left) {
+                _container->setPositionX(_padding.left);
             }
         } else {
             int limit_x = size().x - _container->size().x;
+            if (limit_x <= _padding.left) {
+                limit_x = _padding.left;
+            }
             if (_container->position().x >= limit_x) {
                 _container->setPositionX(limit_x);
             }
@@ -398,11 +424,27 @@ mge_begin
     }
 
     void GridMapCamera::follow(Vector2f const& position) {
-        setCameraPosition(position - size() * 0.5f);
+        if (_move) {
+            return;
+        }
+        auto old_position = _container->position();
+        this->setCameraPosition(position - size() * 0.5f);
+        this->limitCamera();
+        this->update_dirs(_container->position() - old_position);
+        signal(DID_SCROLL)(this);
+    }
+
+    void GridMapCamera::move_offset(Vector2f const& offset) {
+        auto old_position = _container->position();
+        _container->setPosition(_container->position() + offset * -1);
+        this->limitCamera();
+        this->update_dirs(_container->position() - old_position);
+        signal(DID_SCROLL)(this);
     }
 
     void GridMapCamera::move(Vector2f const& speed) {
-        _speed = speed * -1;
+        _speed = speed;
+        _move = int(_speed.x * 1000) != 0 or int(_speed.y * 1000) != 0;
     }
 
     GridMapCamera::MoveDirs const& GridMapCamera::move_dirs() const {
@@ -431,11 +473,19 @@ mge_begin
         return _container->position() * -1;
     }
 
+    Vector2f GridMapCamera::getFollowPosition() const {
+        return getCameraPosition() + size() * 0.5f;
+    }
+
     void GridMapCamera::limitCamera() {
         limitTop();
         limitRight();
         limitBottom();
         limitLeft();
+    }
+
+    void GridMapCamera::setPadding(Padding const& padding) {
+        _padding = padding;
     }
 
     //=====================================================================================
@@ -456,6 +506,12 @@ mge_begin
 
     GridMapLayer* GridMapWidget::getLayer(int index) const {
         return _tileLayers[index];
+    }
+
+    Vector2i GridMapWidget::getContainerSize() const {
+        auto map_size = _dataSource->sizeOfGridMap(this);
+        auto tile_size = _dataSource->sizeOfGridTile(this);
+        return map_size * tile_size;
     }
 
     GridMapCamera* GridMapWidget::getCamera() const {
@@ -505,6 +561,8 @@ mge_begin
                 break;
             }
         }
+
+        signal(ON_DATA_RELOAD)(this);
     }
 
     void GridMapWidget::onModifySize(Vector2f const& size) {

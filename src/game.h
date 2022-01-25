@@ -14,7 +14,7 @@ class GameView : public mge::GamePadWidget,
         public ui::LayoutVariableAssigner,
         public ui::LayoutSelectorAssigner,
         public ui::LayoutNodeListener,
-        public ContextObserver {
+        public GameStateObserver {
 public:
     GameView();
 private:
@@ -22,6 +22,7 @@ private:
     Selector onResolveSelector(mge::Widget* target, const char* name) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
+    void onButtonUp(int key) override;
     void onEvent(mge::Event const& e) override;
     void onUpdate(float delta) override;
     void onOption(Widget* sender);
@@ -38,6 +39,7 @@ private:
     mge::TTFLabel* _time;
     mge::TTFLabel* _mine;
     PlayGame* _play;
+    mge::Vector2f _move;
 };
 
 class GameViewLoader : public ui::NodeLoader {

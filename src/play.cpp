@@ -89,20 +89,30 @@ private:
     Texture::Ptr _wrong;
 };
 
-#define TILE_SIZE 48
+#define TILE_SIZE 56
 
 PlayGame::PlayGame(Context& c):ctx(&c), _gridlayer(new GridMapWidget), _tile(nullptr) {
     _gridlayer->setDataSource(this);
     addChild(Ptr(_gridlayer));
+    _gridlayer->getCamera()->setPadding({100, 150, 100, 150});
+}
+
+void PlayGame::onUpdate(float delta) {
+    _gridlayer->getCamera()->move_offset(_move);
+    _move *= 0.98f;
 }
 
 bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
-    auto position = point + _gridlayer->getCamera()->getCameraPosition().to<int>();
-    auto size = _gridlayer->getLayer(0)->size().to<int>();
-    RectI bound{0, 0, size.x, size.y};
-    if (!bound.contain(position)) {
+
+    if (ctx->state.finished) {
         return false;
     }
+
+    _move.reset();
+
+    auto world_pos = covertToWorldPosition(point.to<float>());
+    auto position = _gridlayer->getLayer(0)->covertToLocalPosition(world_pos);
+
     int x = position.x / TILE_SIZE;
     int y = position.y / TILE_SIZE;
     if (ctx->grid.is_out_of_range(x, y)) {
@@ -111,33 +121,32 @@ bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
     auto& cell = ctx->grid.get(x, y);
     cell.pressed = true;
     _tile = &cell;
+    _prev = point;
     return true;
-}
-
-void PlayGame::onTouchEnded(mge::Vector2i const& point) {
-    if (_tile) {
-        _tile->pressed = false;
-        _tile = nullptr;
-
-        auto position = point + _gridlayer->getCamera()->getCameraPosition().to<int>();
-        int x = position.x / TILE_SIZE;
-        int y = position.y / TILE_SIZE;
-
-        if (ctx->grid.is_out_of_range(x, y)) {
-            return;
-        }
-
-        click_tile(*ctx, {x, y});
-    }
 }
 
 void PlayGame::onTouchMoved(mge::Vector2i const& point) {
     if (_tile == nullptr) {
+        _gridlayer->getCamera()->move_offset((_prev - point).to<float>());
+        _offset = (_prev - point).to<float>();
+        _prev = point;
         return;
     }
-    auto position = point + _gridlayer->getCamera()->getCameraPosition().to<int>();
+
+    if (point.distance(_prev) >= 10) {
+        _tile->pressed = false;
+        _tile = nullptr;
+        _prev = point;
+        return;
+    }
+    _prev = point;
+
+    auto world_pos = covertToWorldPosition(point.to<float>());
+    auto position = _gridlayer->getLayer(0)->covertToLocalPosition(world_pos);
+
     int x = position.x / TILE_SIZE;
     int y = position.y / TILE_SIZE;
+
     if (ctx->grid.is_out_of_range(x, y)) {
         _tile->pressed = false;
         _tile = nullptr;
@@ -150,24 +159,43 @@ void PlayGame::onTouchMoved(mge::Vector2i const& point) {
     }
 }
 
+void PlayGame::onTouchEnded(mge::Vector2i const& point) {
+    if (_tile) {
+        auto& position = _tile->position;
+        _tile->pressed = false;
+        _tile = nullptr;
+        if (ctx->grid.is_out_of_range(position)) {
+            return;
+        }
+        click_tile(*ctx, position);
+    }
+    if (_offset.distance({0.0f, 0.0f}) >= 10) {
+        _move = _offset;
+        _offset.reset();
+    }
+}
+
 mge::GridMapWidget* PlayGame::grid() const {
     return _gridlayer;
 }
 
 void PlayGame::restart() {
-    restart_game(*ctx, {11, 11}, 20);
+    restart_game(*ctx, {ctx->setting.map_width, ctx->setting.map_height}, ctx->setting.mine_number);
+}
+
+void PlayGame::reload_data() {
     _gridlayer->reload_data();
 }
 
-size_t PlayGame::numberOfLayersInWidget(mge::GridMapWidget* sender) {
+size_t PlayGame::numberOfLayersInWidget(mge::GridMapWidget const* sender) {
     return 1;
 }
 
-mge::Vector2i PlayGame::sizeOfGridMap(mge::GridMapWidget* sender) {
+mge::Vector2i PlayGame::sizeOfGridMap(mge::GridMapWidget const* sender) {
     return ctx->grid.size();
 }
 
-mge::Vector2i PlayGame::sizeOfGridTile(mge::GridMapWidget* sender) {
+mge::Vector2i PlayGame::sizeOfGridTile(mge::GridMapWidget const* sender) {
     return {TILE_SIZE, TILE_SIZE};
 }
 
@@ -175,7 +203,7 @@ Widget::Ptr PlayGame::tileWidgetAtPosition(mge::GridMapWidget* sender, int layer
     auto view = sender->dequeueTile(layerIndex);
     if (view == nullptr) {
         view.reset(new MineTileCell);
-        view->fast_to<MineTileCell>()->setData(&ctx->grid.get(position));
     }
+    view->fast_to<MineTileCell>()->setData(&ctx->grid.get(position));
     return view;
 }

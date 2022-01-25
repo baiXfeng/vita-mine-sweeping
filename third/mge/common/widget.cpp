@@ -42,6 +42,20 @@ void TestWidget() {
 
 //=====================================================================================
 
+WidgetSignal::SignalType::slot_type WidgetSignal::connect(int type, SignalType::observer_type const& obs) {
+    return signal(type).connect(obs);
+}
+
+void WidgetSignal::disconnect(int type, SignalType::slot_type const& obs) {
+    signal(type).disconnect(obs);
+}
+
+WidgetSignal::SignalType& WidgetSignal::signal(int type) {
+    return _signals[type];
+}
+
+//=====================================================================================
+
 Widget::Widget():
 _parent(nullptr),
 _userdata(nullptr),
@@ -138,6 +152,14 @@ void Widget::setTouchEnable(bool b) {
     _touchEnable = b;
 }
 
+Vector2f Widget::covertToWorldPosition(Vector2f const& local_position) {
+    return global_position() + local_position;
+}
+
+Vector2f Widget::covertToLocalPosition(Vector2f const& world_position) {
+    return world_position - global_position();
+}
+
 void Widget::addChild(WidgetPtr const& widget) {
     addChild(widget, _children.size());
 }
@@ -193,18 +215,6 @@ Widget::WidgetArray& Widget::children() {
 
 Widget::WidgetArray const& Widget::children() const {
     return _children;
-}
-
-Widget::SenderSignal::slot_type Widget::connect(int type, SenderSignal::observer_type const& obs) {
-    return _signal_pool[type].connect(obs);
-}
-
-void Widget::disconnect(int type, SenderSignal::slot_type const& obs) {
-    _signal_pool[type].disconnect(obs);
-}
-
-Widget::SenderSignal& Widget::signal(int key) {
-    return _signal_pool[key];
 }
 
 void Widget::update(float delta) {
@@ -269,11 +279,11 @@ void Widget::dirty() {
 
 void Widget::enter() {
     onEnter();
-    _signal_pool[ON_ENTER](this);
+    signal(ON_ENTER)(this);
 }
 
 void Widget::exit() {
-    _signal_pool[ON_EXIT](this);
+    signal(ON_EXIT)(this);
     onExit();
 }
 

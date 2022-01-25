@@ -32,12 +32,12 @@ namespace ui {
                 float x = 0.0f, y = 0.0f;
                 auto screen_size = _game.screen().screen_size();
                 if (ret[0].back() == '%') {
-                    x = (atof(ret[0].c_str()) / 100.0f) * (parent ? parent->size().x : screen_size.x);
+                    x = (atof(ret[0].c_str()) / 100.0f) * (parent ? parent->size().x * parent->scale().x : screen_size.x);
                 } else {
                     x = atof(ret[0].c_str());
                 }
                 if (ret[1].back() == '%') {
-                    y = (atof(ret[1].c_str()) / 100.0f) * (parent ? parent->size().y : screen_size.y);
+                    y = (atof(ret[1].c_str()) / 100.0f) * (parent ? parent->size().y * parent->scale().y : screen_size.y);
                 } else {
                     y = atof(ret[1].c_str());
                 }
@@ -72,6 +72,8 @@ namespace ui {
             pystring::split(value, ret, ",");
             if (ret.size() == 2) {
                 node->setScale(atof(ret[0].c_str()), atof(ret[1].c_str()));
+            } else if (ret.size() == 1) {
+                node->setScale(atof(ret[0].c_str()));
             }
         } else if (strcmp(name, "Rotation") == 0) {
             node->setRotation(atof(value));

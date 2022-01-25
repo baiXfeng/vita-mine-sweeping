@@ -15,11 +15,6 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
     srand(time(nullptr));
 
     c.grid.resize(mapSize, {});
-    for (int i = 0; i < c.grid.cells().size(); ++i) {
-        auto& cell = c.grid.cells()[i];
-        cell.id = i + 1;
-        cell.flag = &c.flag;
-    }
 
     // 生成地雷
     {
@@ -76,25 +71,39 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
         }
     }
 
+    for (int i = 0; i < c.grid.cells().size(); ++i) {
+        auto& cell = c.grid.cells()[i];
+        cell.id = i + 1;
+        cell.flag = &c.state.flag;
+        cell.position = {
+                i % mapSize.x,
+                i / mapSize.x,
+        };
+    }
+
     // 游戏开始通知
     _game.event().notify(mge::Event(EVENT_ID::GAME_START));
 
     // 更新游戏时间显示
-    c.seconds = 0.0f;
-    c.notify(&ContextObserver::onTimeModify, c.seconds);
+    c.state.seconds = 0.0f;
+    c.state.notify_time();
 
     // 更新地雷数量显示
-    c.max_mine_number = number_of_mine;
-    c.mine_number = number_of_mine;
-    c.notify(&ContextObserver::onMineNumberModify, c.mine_number);
+    c.state.max_mine_number = number_of_mine;
+    c.state.mine_number = number_of_mine;
+    c.state.notify_mine_number();
 
-    c.flag = false;
-    c.finished = false;
-    c.first_click = true;
+    c.state.flag = false;
+    c.state.finished = false;
+    c.state.first_click = true;
     return true;
 }
 
 bool click_tile(Context& c, mge::Vector2i const& position) {
+
+    if (c.state.finished) {
+        return false;
+    }
 
     if (c.grid.is_out_of_range(position)) {
         return true;
@@ -103,17 +112,17 @@ bool click_tile(Context& c, mge::Vector2i const& position) {
     auto& cell = c.grid.get(position);
 
     if (cell.flag_on) {
-        if (c.flag) {
+        if (c.state.flag) {
             return set_flag(c, position);
         }
         return true;
     }
 
     if (cell.hidden) {
-        if (c.flag and !c.first_click) {
+        if (c.state.flag and !c.state.first_click) {
             return set_flag(c, position);
         }
-        c.first_click = false;
+        c.state.first_click = false;
         return open_tile(c, position);
     }
 
@@ -132,7 +141,7 @@ public:
     }
 private:
     void check() {
-        if (ctx.finished) {
+        if (ctx.state.finished) {
             return;
         }
         int hidden_number = 0;
@@ -145,13 +154,13 @@ private:
                 mine_array.emplace_back(&cell);
             }
         }
-        if (hidden_number == ctx.max_mine_number) {
+        if (hidden_number == ctx.state.max_mine_number) {
             for (auto cell : mine_array) {
                 cell->flag_on = true;
             }
-            ctx.mine_number = 0;
-            ctx.notify(&ContextObserver::onMineNumberModify, ctx.mine_number);
-            ctx.finished = true;
+            ctx.state.mine_number = 0;
+            ctx.state.notify_mine_number();
+            ctx.state.finished = true;
             _game.event().notify(EVENT_ID::GAME_WIN);
         }
     }
@@ -177,7 +186,7 @@ bool open_tile(Context& c, mge::Vector2i const& position) {
         cell.bomb = true;
         cell.hidden = false;
         clear_all_mine(c);
-        c.finished = true;
+        c.state.finished = true;
         _game.event().notify(mge::Event(EVENT_ID::GAME_OVER));
         return true;
     }
@@ -342,11 +351,11 @@ bool set_flag(Context& c, mge::Vector2i const& position) {
     cell.flag_on = !cell.flag_on;
 
     if (cell.flag_on) {
-        c.mine_number--;
+        c.state.mine_number--;
     } else {
-        c.mine_number++;
+        c.state.mine_number++;
     }
-    c.notify(&ContextObserver::onMineNumberModify, c.mine_number);
+    c.state.notify_mine_number();
 
     return true;
 }

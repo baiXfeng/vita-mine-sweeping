@@ -9,16 +9,16 @@
 #include "common/observer.h"
 #include "tile.h"
 
-class ContextObserver {
+class GameStateObserver {
 public:
-    virtual ~ContextObserver() {}
+    virtual ~GameStateObserver() {}
     virtual void onTimeModify(float seconds) {}
     virtual void onMineNumberModify(uint32_t number) {}
 };
 
-class Context : public mge::Observer<ContextObserver> {
+class GameState : public mge::Observer<GameStateObserver> {
 public:
-    Context() {
+    GameState() {
         flag = false;
         finished = false;
         paused = false;
@@ -34,7 +34,47 @@ public:
     uint32_t mine_number;   // 剩余地雷数量
     uint32_t max_mine_number;   // 地雷总数
     float seconds;  // 游戏时间
-    mge::Grid<Tile> grid;
+
+    void notify_time() {
+        notify(&GameStateObserver::onTimeModify, seconds);
+    }
+    void notify_mine_number() {
+        notify(&GameStateObserver::onMineNumberModify, mine_number);
+    }
+};
+
+class GameConfig {
+public:
+    GameConfig() {
+        max_map_width = 64;
+        max_map_height = 64;
+        min_map_width = 2;
+        min_map_height = 2;
+    }
+    uint32_t max_map_width;    // 最大地图宽度
+    uint32_t max_map_height;   // 最大地图高度
+    uint32_t min_map_width;    // 最小地图宽度
+    uint32_t min_map_height;   // 最小地图高度
+};
+
+class GameSetting {
+public:
+    GameSetting() {
+        map_width = 20;
+        map_height = 20;
+        mine_number = 20 * 20 * 0.12f;
+    }
+    uint32_t map_width;     // 地图宽度
+    uint32_t map_height;    // 地图高度
+    uint32_t mine_number;   // 地雷数量
+};
+
+class Context {
+public:
+    GameConfig const config;    // 游戏静态配置
+    GameSetting setting;        // 游戏设置
+    GameState state;            // 游戏状态
+    mge::Grid<Tile> grid;       // 地图数据
 };
 
 #define ENUM(NAME, VALUE) static const int NAME = VALUE

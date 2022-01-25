@@ -28,9 +28,21 @@ public:
     virtual void onScreenSleep() {}
 };
 
+class WidgetSignal {
+public:
+    typedef Signal<void(Widget*)> SignalType;
+    virtual ~WidgetSignal() {}
+public:
+    SignalType::slot_type connect(int type, SignalType::observer_type const& obs);
+    void disconnect(int type, SignalType::slot_type const& obs);
+    SignalType& signal(int type);
+protected:
+    std::unordered_map<int, SignalType> _signals;
+};
+
 class Action;
 class BaseActionExecuter;
-class Widget : public GamePadListener, public Event::Listener {
+class Widget : public WidgetSignal, public GamePadListener, public Event::Listener {
 public:
     typedef std::shared_ptr<Widget> WidgetPtr;
     typedef std::vector<WidgetPtr> WidgetArray;
@@ -41,8 +53,6 @@ public:
         ON_ENTER = 0xABEF0001,
         ON_EXIT,
     };
-    typedef Signal<void(Widget*)> SenderSignal;
-    typedef std::unordered_map<int, SenderSignal> SignalPool;
 public:
     template<typename T, typename... Args>
     static Ptr New(Args const&... args) {
@@ -68,9 +78,13 @@ public:
     void enableClip(bool clip);
     void setVisible(bool visible);
     void performLayout();
+    void try_performLayout();
 public:
     bool isTouchEnabled() const;
     void setTouchEnable(bool b);
+public:
+    Vector2f covertToWorldPosition(Vector2f const& local_position);
+    Vector2f covertToLocalPosition(Vector2f const& world_position);
 public:
     virtual void addChild(WidgetPtr const& widget);
     virtual void addChild(WidgetPtr const& widget, int index);
@@ -80,10 +94,6 @@ public:
     virtual void removeFromParent();
     WidgetArray& children();
     WidgetArray const& children() const;
-public:
-    SenderSignal::slot_type connect(int type, SenderSignal::observer_type const& obs);
-    void disconnect(int type, SenderSignal::slot_type const& obs);
-    SenderSignal& signal(int key);
 public:
     virtual void update(float delta);
     virtual void draw(SDL_Renderer* renderer);
@@ -171,7 +181,6 @@ protected:
     std::string _name;
     WidgetArray _children;
     ActionExecuterPtr _action;
-    SignalPool _signal_pool;
 };
 
 class LayerWidget : public Widget, public FingerResponder {
