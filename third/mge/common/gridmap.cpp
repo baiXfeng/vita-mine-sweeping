@@ -424,12 +424,18 @@ mge_begin
     }
 
     void GridMapCamera::follow(Vector2f const& position) {
+        follow(position, true);
+    }
+
+    void GridMapCamera::follow(Vector2f const& position, bool limit_camera) {
         if (_move) {
             return;
         }
         auto old_position = _container->position();
         this->setCameraPosition(position - size() * 0.5f);
-        this->limitCamera();
+        if (limit_camera) {
+            this->limitCamera();
+        }
         this->update_dirs(_container->position() - old_position);
         signal(DID_SCROLL)(this);
     }

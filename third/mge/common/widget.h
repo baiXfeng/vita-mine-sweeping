@@ -390,6 +390,7 @@ public:
     WidgetPtr& scene_back() const;
     WidgetPtr find(std::string const& name) const;
 public:
+    bool hasAction(std::string const& name) const;
     void runAction(ActionPtr const& action);
     void stopAction(ActionPtr const& action);
     void stopAction(std::string const& name);

@@ -70,7 +70,7 @@ void GameView::onRestart(Widget* sender) {
     _play->restart();
     auto layer_size = _play->grid()->getContainerSize();
     auto camera = _play->grid()->getCamera();
-    camera->follow(layer_size.to<float>() * 0.5f);
+    camera->follow(layer_size.to<float>() * 0.5f, false);
     _play->reload_data();
 }
 
@@ -80,13 +80,13 @@ void GameView::onButtonDown(int key) {
     } else if (key == KeyCode::L1 or key == KeyCode::R1) {
         _c.state.flag = !_c.state.flag;
     } else if (KeyCode::UP == key) {
-        _move.y = -300;
+        _move.y = -700;
     } else if (KeyCode::DOWN == key) {
-        _move.y = 300;
+        _move.y = 700;
     } else if (KeyCode::LEFT == key) {
-        _move.x = -300;
+        _move.x = -700;
     } else if (KeyCode::RIGHT == key) {
-        _move.x = 300;
+        _move.x = 700;
     }
 }
 

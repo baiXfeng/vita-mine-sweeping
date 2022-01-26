@@ -15,6 +15,7 @@ private:
     bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
+    bool onTouchBegen(mge::Vector2i const& point) override;
     void gotoGame();
 private:
     void onScreenWake() override;

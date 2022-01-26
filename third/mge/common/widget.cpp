@@ -1119,6 +1119,10 @@ Widget::Ptr ScreenWidget::find(std::string const& name) const {
     return nullptr;
 }
 
+bool ScreenWidget::hasAction(std::string const& name) const {
+    return WindowWidget::hasAction(name);
+}
+
 void ScreenWidget::runAction(Action::Ptr const& action) {
     WindowWidget::runAction(action);
 }

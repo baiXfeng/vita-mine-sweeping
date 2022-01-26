@@ -43,6 +43,11 @@ void StartView::onButtonDown(int key) {
     runAction(Action::Ptr(new Sequence({blink, call})));
 }
 
+bool StartView::onTouchBegen(mge::Vector2i const& point) {
+    onButtonDown(KeyCode::A);
+    return true;
+}
+
 void StartView::gotoGame() {
     sleep_gamepad(0.0f);
     _tips->setVisible(true);

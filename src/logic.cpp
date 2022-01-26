@@ -71,6 +71,7 @@ bool restart_game(Context& c, mge::Vector2i const& mapSize, uint32_t number_of_m
         }
     }
 
+    // 设置id和坐标
     for (int i = 0; i < c.grid.cells().size(); ++i) {
         auto& cell = c.grid.cells()[i];
         cell.id = i + 1;

@@ -86,6 +86,13 @@ void Mouse::add(FingerResponder* resp) {
     this->remove(resp);
     _responder.push_back(resp);
     _sort_dirty = true;
+
+    const std::string name = "Mouse::sortResponderList";
+    if (not _game.screen().hasAction(name)) {
+        auto action = Action::New<CallBackVoid>(std::bind(&Mouse::sortResponderList, this));
+        action->setName(name);
+        _game.screen().runAction(action);
+    }
 }
 
 void Mouse::remove(FingerResponder* resp) {
@@ -158,7 +165,6 @@ void Mouse::onFingerDown(Vector2i const& point) {
         _current = nullptr;
         return;
     }
-    this->sortResponderList();
     for (auto iter = _responder.rbegin(); iter != _responder.rend(); iter++) {
         if (auto resp = *iter; resp) {
             if (auto widget = resp->owner(); widget) {

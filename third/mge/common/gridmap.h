@@ -88,6 +88,7 @@ public:
     GridMapCamera(Widget* container);
 public:
     void follow(Vector2f const& position);
+    void follow(Vector2f const& position, bool limit_camera);
     void move(Vector2f const& speed);
     void move_offset(Vector2f const& offset);
     MoveDirs const& move_dirs() const;
