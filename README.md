@@ -1,6 +1,9 @@
 # Vita-Mine-Sweeping
 Mine sweeping for Psvita and Nintendo Switch with sdl2.
 
+![avatar](https://github.com/baiXfeng/vita-mine-sweeping/assets/screenshot/screenshot1.png)
+![avatar](https://github.com/baiXfeng/vita-mine-sweeping/assets/screenshot/screenshot2.png)
+
 ### Windows install depends:
 - Install [MinGW](https://www.mingw-w64.org/downloads/)
 - Install [SDL2-MinGw-dev](http://www.libsdl.org/download-2.0.php)
