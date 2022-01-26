@@ -104,10 +104,6 @@ void PlayGame::onUpdate(float delta) {
 
 bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
 
-    if (ctx->state.finished) {
-        return false;
-    }
-
     _move.reset();
 
     auto world_pos = covertToWorldPosition(point.to<float>());
@@ -126,6 +122,7 @@ bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
 }
 
 void PlayGame::onTouchMoved(mge::Vector2i const& point) {
+
     if (_tile == nullptr) {
         _gridlayer->getCamera()->move_offset((_prev - point).to<float>());
         _offset = (_prev - point).to<float>();
