@@ -50,6 +50,7 @@ public:
 
 class Widget;
 class GamePad {
+    friend class Game;
 public:
     typedef std::shared_ptr<Widget> WidgetPtr;
     typedef std::list<WidgetPtr> List;
@@ -64,8 +65,8 @@ public:
     void add(WidgetPtr const& widget);
     void remove(WidgetPtr const& widget);
     void remove(Widget const* widget);
-    void onEvent(SDL_Event const& event);
 private:
+    void onEvent(SDL_Event const& event);
     void _onJoyEvent(SDL_Event const& event);
     void _remapKeyboardEvent(SDL_Event const& event);
 private:

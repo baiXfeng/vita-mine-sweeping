@@ -13,23 +13,25 @@ mge_begin
 class Widget;
 class FingerResponder {
 public:
-    FingerResponder(Widget* widget);
+    FingerResponder(Widget* widget):_owner(widget), _zorder(0) {}
     virtual ~FingerResponder() {}
     virtual bool onTouchBegen(Vector2i const& point) {
         return false;
     }
     virtual void onTouchMoved(Vector2i const& point) {}
     virtual void onTouchEnded(Vector2i const& point) {}
-    virtual uint32_t getLayerIndex() const;
-    bool operator > (FingerResponder& f) {
-        return getLayerIndex() > f.getLayerIndex();
+    Widget* owner() const {
+        return _owner;
     }
-    bool operator < (FingerResponder& f) {
-        return getLayerIndex() < f.getLayerIndex();
+    void setTouchZOrder(uint32_t zorder) {
+        _zorder = zorder;
     }
-    Widget* owner() const;
+    uint32_t getTouchZOrder() const {
+        return _zorder;
+    }
 protected:
     Widget* _owner;
+    uint32_t _zorder;
 };
 
 mge_end

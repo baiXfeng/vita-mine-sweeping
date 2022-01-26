@@ -8,10 +8,11 @@
 #include "log.h"
 #include "finger_responder.h"
 #include "action.h"
+#include "defer_function.h"
 
 mge_begin
 
-Mouse::Mouse():_finger_downed(false), _usefinger(false), _current(nullptr), _sleep(false) {
+Mouse::Mouse():_finger_downed(false), _usefinger(false), _current(nullptr), _sleep(false), _sort_dirty(false), _zorder(0) {
 #if defined(__vita__)
     _usefinger = true;
 #endif
@@ -30,16 +31,61 @@ void Mouse::sleep(float seconds) {
     widget.runAction(action);
 }
 
-static uint32_t getLevel(Widget* widget) {
+static uint32_t getWidgetZOrder(Widget* widget) {
     int ret = 1;
     while ((widget = widget->parent()) and ++ret) {}
     return ret;
 }
 
+void Mouse::sortResponderList() {
+    if (!_sort_dirty) {
+        return;
+    }
+    Defer<bool> defer([](bool* value){
+        *value = false;
+    }, &_sort_dirty);
+
+    // 获取新注册的响应器
+    _insertResponder.clear();
+    for (auto& resp : _responder) {
+        if (resp->getTouchZOrder() == 0) {
+            _insertResponder.emplace(resp->owner(), resp);
+        }
+    }
+    if (_insertResponder.empty()) {
+        return;
+    }
+
+    // 为响应器设置层级权重
+    uint32_t zorder = 0xffff;
+    FingerResponder* responder = nullptr;
+    for (auto& resp : _insertResponder) {
+        if (auto value = getWidgetZOrder(resp.first); value < zorder) {
+            zorder = value;
+            responder = resp.second;
+        }
+    }
+    visit_widget(responder->owner());
+
+    // 对响应器排序
+    _responder.sort([](FingerResponder const* first, FingerResponder const* second)->bool {
+        return first->getTouchZOrder() < second->getTouchZOrder();
+    });
+}
+
+void Mouse::visit_widget(Widget* widget) {
+    if (auto iter = _insertResponder.find(widget); iter != _insertResponder.end()) {
+        iter->second->setTouchZOrder(++_zorder);
+    }
+    for (auto& child : widget->children()) {
+        visit_widget(child.get());
+    }
+}
+
 void Mouse::add(FingerResponder* resp) {
     this->remove(resp);
     _responder.push_back(resp);
-    _responder.sort();
+    _sort_dirty = true;
 }
 
 void Mouse::remove(FingerResponder* resp) {
@@ -49,6 +95,7 @@ void Mouse::remove(FingerResponder* resp) {
     if (resp == _current) {
         _current = nullptr;
     }
+    _sort_dirty = true;
 }
 
 void Mouse::onEvent(SDL_Event const& event) {
@@ -107,10 +154,11 @@ void Mouse::onFingerEvent(SDL_Event const& event) {
 
 void Mouse::onFingerDown(Vector2i const& point) {
     //LOG("鼠标按下: %d, %d\n", point.x, point.y);
-    _current = nullptr;
     if (_sleep) {
+        _current = nullptr;
         return;
     }
+    this->sortResponderList();
     for (auto iter = _responder.rbegin(); iter != _responder.rend(); iter++) {
         if (auto resp = *iter; resp) {
             if (auto widget = resp->owner(); widget) {

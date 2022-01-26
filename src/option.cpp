@@ -80,6 +80,7 @@ void OptionView::onApply(mge::Widget* sender) {
     ctx->setting.map_width = _valueCache[MAP_WIDTH];
     ctx->setting.map_height = _valueCache[MAP_HEIGHT];
     ctx->setting.mine_number = _valueCache[MINE_NUMBER];
+    _game.force_get<GameSetting>("game_setting") = ctx->setting;
     exitView();
 }
 

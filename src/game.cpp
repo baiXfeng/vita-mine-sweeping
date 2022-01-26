@@ -25,6 +25,7 @@ GameView::GameView():_time(nullptr), _mine(nullptr), _play(nullptr) {
         _game.event().remove(EVENT_ID::GAME_WIN, this);
     });
     _c.state.add(this);
+    _c.setting = _game.force_get<GameSetting>("game_setting");
 }
 
 bool GameView::onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {

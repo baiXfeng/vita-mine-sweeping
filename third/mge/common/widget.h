@@ -186,6 +186,10 @@ protected:
 class LayerWidget : public Widget, public FingerResponder {
 public:
     LayerWidget();
+protected:
+    bool onTouchBegen(Vector2i const& point) override {
+        return true;
+    }
 };
 
 class WindowWidget : public Widget {
