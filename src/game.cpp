@@ -75,7 +75,7 @@ void GameView::onRestart(Widget* sender) {
 
 void GameView::onButtonDown(int key) {
     if (key == KeyCode::B) {
-        _game.screen().pop();
+        //_game.screen().pop();
     } else if (key == KeyCode::L1 or key == KeyCode::R1) {
         _c.state.flag = !_c.state.flag;
     } else if (KeyCode::UP == key) {

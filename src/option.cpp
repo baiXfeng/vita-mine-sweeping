@@ -62,15 +62,17 @@ void OptionView::onLayoutLoaded() {
     auto scale = mge::Action::New<mge::ScaleTo>(_renderTarget, mge::Vector2f{1.0f, 1.0f}, 0.3f);
     auto finished = mge::Action::New<mge::CallBackVoid>([this]{
         _renderTarget->setRenderTargetNull();
+        sleep_gamepad(0.0f);
     });
     auto action = mge::Action::Ptr(new mge::Sequence({scale, finished}));
     runAction(action);
     _renderTarget->setScale(0.01f);
+    sleep_gamepad(10.0f);
 }
 
 void OptionView::onButtonDown(int key) {
     if (key == KeyCode::B) {
-        exitView();
+        //exitView();
     }
 }
 

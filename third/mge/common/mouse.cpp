@@ -7,17 +7,27 @@
 #include "widget.h"
 #include "log.h"
 #include "finger_responder.h"
+#include "action.h"
 
 mge_begin
 
-Mouse::Mouse():_finger_downed(false), _usefinger(false), _current(nullptr) {
+Mouse::Mouse():_finger_downed(false), _usefinger(false), _current(nullptr), _sleep(false) {
 #if defined(__vita__)
     _usefinger = true;
 #endif
 }
 
 void Mouse::sleep(float seconds) {
-
+    _sleep = true;
+    auto delay = Action::Ptr(new Delay(seconds));
+    auto call = Action::Ptr(new CallBackVoid([&]{
+        this->_sleep = false;
+    }));
+    auto action = Action::Ptr(new Sequence({delay, call}));
+    action->setName("Mouse::sleep");
+    auto& widget = _game.screen();
+    widget.stopAction(action->name());
+    widget.runAction(action);
 }
 
 static uint32_t getLevel(Widget* widget) {
@@ -97,6 +107,10 @@ void Mouse::onFingerEvent(SDL_Event const& event) {
 
 void Mouse::onFingerDown(Vector2i const& point) {
     //LOG("鼠标按下: %d, %d\n", point.x, point.y);
+    _current = nullptr;
+    if (_sleep) {
+        return;
+    }
     for (auto iter = _responder.rbegin(); iter != _responder.rend(); iter++) {
         if (auto resp = *iter; resp) {
             if (auto widget = resp->owner(); widget) {

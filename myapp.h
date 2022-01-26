@@ -12,10 +12,12 @@
 #include "common/action.h"
 #include "common/xml_layout.h"
 #include "uilayout/ui-layout.h"
+#include "uilayout/node-loader.h"
 #include "src/start.h"
 #include "src/game.h"
 #include "src/play.h"
 #include "src/gameover.h"
+#include "src/option.h"
 
 class MyApp : public mge::Game::App {
 public:
@@ -26,9 +28,7 @@ public:
         _game.uilayout().getLoaderPool()->addLoader<StartViewLoader>("StartView");
         _game.uilayout().getLoaderPool()->addLoader<GameViewLoader>("GameView");
         _game.uilayout().getLoaderPool()->addLoader<GameOverViewLoader>("GameOver");
-
-        _game.screen().push( _game.uilayout().readNode("assets/layouts/game.xml") );
-        return;
+        _game.uilayout().getLoaderPool()->addLoader<OptionViewLoader>("OptionView");
 
         auto texture = mge::res::load_texture("assets/images/title-bg.png");
         _game.screen().push<mge::ImageWidget>(texture);

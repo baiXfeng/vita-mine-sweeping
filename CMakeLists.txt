@@ -110,7 +110,7 @@ if (PSV)
 	ENDFOREACH()
 
 	set(VITA_APP_NAME "Vita 扫雷")
-	set(VITA_TITLEID  "SDL2BC002") #目录名必须9个字符
+	set(VITA_TITLEID  "VITAMINE0") #目录名必须9个字符
 	set(VITA_VERSION  "01.00")
 
 	vita_create_self(${PROJECT_NAME}.self ${PROJECT_ELF})

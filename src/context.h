@@ -60,9 +60,9 @@ public:
 class GameSetting {
 public:
     GameSetting() {
-        map_width = 20;
-        map_height = 20;
-        mine_number = 20 * 20 * 0.12f;
+        map_width = 10;
+        map_height = 10;
+        mine_number = 10 * 10 * 0.12f;
     }
     uint32_t map_width;     // 地图宽度
     uint32_t map_height;    // 地图高度

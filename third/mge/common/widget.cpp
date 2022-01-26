@@ -609,6 +609,7 @@ GamePadWidget::GamePadWidget() {
 
 void GamePadWidget::sleep_gamepad(float seconds) {
     _game.gamepad().sleep(seconds);
+    _game.mouse().sleep(seconds);
 }
 
 //=====================================================================================
