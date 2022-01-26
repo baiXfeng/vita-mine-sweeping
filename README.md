@@ -1,4 +1,4 @@
-# battle-city-remake
+# Vita-Mine-Sweeping
 Mine sweeping for Psvita and Nintendo Switch with sdl2.
 
 ### Windows install depends:
@@ -10,7 +10,7 @@ Mine sweeping for Psvita and Nintendo Switch with sdl2.
 
 ### Build for Windows
 - Install [CLion](https://www.jetbrains.com/clion/) - A cross-platform IDE for C and C++
-- Run CLion and open battle-city-remake folder
+- Run CLion and open vita-mine-sweeping folder
 - Build and Run
 
 
