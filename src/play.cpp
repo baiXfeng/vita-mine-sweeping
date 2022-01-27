@@ -130,7 +130,7 @@ void PlayGame::onTouchMoved(mge::Vector2i const& point) {
         return;
     }
 
-    if (point.distance(_prev) >= 10) {
+    if (point.distance(_prev) > 8) {
         _tile->pressed = false;
         _tile = nullptr;
         _prev = point;
@@ -166,7 +166,7 @@ void PlayGame::onTouchEnded(mge::Vector2i const& point) {
         }
         click_tile(*ctx, position);
     }
-    if (_offset.distance({0.0f, 0.0f}) >= 10) {
+    if (_offset.distance({0.0f, 0.0f}) > 8) {
         _move = _offset;
         _offset.reset();
     }
