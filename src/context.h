@@ -62,7 +62,7 @@ public:
     GameSetting() {
         map_width = 10;
         map_height = 10;
-        mine_number = 10 * 10 * 0.12f;
+        mine_number = map_width * map_height * 0.12f;
     }
     uint32_t map_width;     // 地图宽度
     uint32_t map_height;    // 地图高度

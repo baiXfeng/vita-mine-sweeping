@@ -44,23 +44,12 @@ public:
 protected:
     Widget::Ptr dequeueTile();
     void enqueueTile(Widget::Ptr const& widget);
-    void tagTile(size_t tile_index, TileWidget* tile_view);
-    void makeTile(Vector2i const& tile_pos);
+    void makeTile(Vector2i const& tile_pos, Vector2i const& map_size, Vector2i const& tile_size);
     void checkTiles();
-protected:
-    void removeTop();
-    void removeBottom();
-    void removeLeft();
-    void removeRight();
-    void insertTop();
-    void insertBottom();
-    void insertLeft();
-    void insertRight();
 protected:
     typedef std::list<Widget::Ptr> TileQueue;
     typedef std::unordered_map<int, TileWidget*> TilePool;
     int _layerIndex;
-    int _minIndex, _maxIndex;
     GridMapWidget* _gridmap;
     TileQueue _idleTiles;
     TileQueue _busyTiles;
