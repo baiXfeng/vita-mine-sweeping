@@ -111,7 +111,7 @@ if (PSV)
 
 	set(VITA_APP_NAME "Vita 扫雷")
 	set(VITA_TITLEID  "VITAMINE0") #目录名必须9个字符
-	set(VITA_VERSION  "01.00")
+	set(VITA_VERSION  "1.0.1")
 
 	vita_create_self(${PROJECT_NAME}.self ${PROJECT_ELF})
 	vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
@@ -153,9 +153,9 @@ elseif(NINTENDO_SWITCH)
 	)
 	file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/romfs)
 	nx_generate_nacp(${PROJECT_NAME}.nacp
-			NAME "Battle City"
+			NAME "Vita 扫雷"
 			AUTHOR "BAIFENG"
-			VERSION "1.0.0"
+			VERSION "1.0.1"
 	)
 	nx_create_nro(${PROJECT_NAME}
 			NACP ${PROJECT_NAME}.nacp
