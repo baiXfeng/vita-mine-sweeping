@@ -3,6 +3,7 @@
 //
 
 #include "file-reader.h"
+#include "common/loadres.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -49,7 +50,8 @@ namespace ui {
     }
 
     DiskFileReader::Data DiskFileReader::getData(std::string const& name) {
-        FILE* fp = fopen(name.c_str(), "rb");
+        auto filename = mge::res::getAssetsPath() + name;
+        FILE* fp = fopen(filename.c_str(), "rb");
         if (fp == NULL) {
             return Data();
         }
