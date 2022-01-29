@@ -111,7 +111,7 @@ if (PSV)
 
 	set(VITA_APP_NAME "Vita 扫雷")
 	set(VITA_TITLEID  "VITAMINE0") #目录名必须9个字符
-	set(VITA_VERSION  "1.0.1")
+	set(VITA_VERSION  "01.02")
 
 	vita_create_self(${PROJECT_NAME}.self ${PROJECT_ELF})
 	vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
