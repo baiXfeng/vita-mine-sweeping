@@ -9,7 +9,6 @@
 #include "layout-info.h"
 #include "layout-variable-assigner.h"
 #include "private/layout-document.h"
-#include "pugixml.hpp"
 #include "common/widget.h"
 #include <assert.h>
 

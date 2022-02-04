@@ -5,6 +5,7 @@
 #include "action.h"
 #include "widget.h"
 #include "mutex.h"
+#include "fix.hpp"
 #include <algorithm>
 
 mge_begin
