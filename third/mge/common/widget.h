@@ -43,6 +43,7 @@ protected:
 class Action;
 class BaseActionExecuter;
 class Widget : public WidgetSignal, public GamePadListener, public Event::Listener {
+    friend class Game;
 public:
     typedef std::shared_ptr<Widget> WidgetPtr;
     typedef std::vector<WidgetPtr> WidgetArray;
@@ -161,6 +162,8 @@ public:
     void resumeAllActions();
 protected:
     void modifyLayout();
+    void push_clip(SDL_Rect const& clip);
+    void pop_clip();
 protected:
     bool _visible;
     bool _update;
@@ -181,6 +184,7 @@ protected:
     std::string _name;
     WidgetArray _children;
     ActionExecuterPtr _action;
+    static std::vector<SDL_Rect> _clipStack;
 };
 
 class LayerWidget : public Widget, public FingerResponder {
@@ -362,7 +366,7 @@ private:
     Widget::Ptr _mask[2];
 };
 
-class ScreenWidget : protected WindowWidget {
+class ScreenWidget final : protected WindowWidget {
     friend class Game;
 public:
     ScreenWidget();

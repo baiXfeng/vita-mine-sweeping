@@ -61,7 +61,22 @@ void Game::input() {
     while( SDL_PollEvent( &e ) != 0 ) {
         if( e.type == SDL_QUIT ) {
             _quit = true;
-            continue;
+            return;
+        } else if (e.type == SDL_WINDOWEVENT) {
+            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                Vector2i size;
+                SDL_GetWindowSize(window(), &size.x, &size.y);
+                if (size.x <= sdl_screen_size.x) {
+                    size.x = sdl_screen_size.x;
+                }
+                if (size.y <= sdl_screen_size.y) {
+                    size.y = sdl_screen_size.y;
+                }
+                SDL_Rect r{0, 0, size.x, size.y};
+                SDL_RenderSetClipRect(renderer(), &r);
+                screen()._clipStack.front() = r;
+                continue;
+            }
         }
         gamepad().onEvent(e);
         mouse().onEvent(e);
@@ -93,6 +108,7 @@ int Game::run() {
     }
 
     this->initVariable();
+    this->screen().push_clip({0, 0, sdl_screen_size.x, sdl_screen_size.y});
     this->_delegate->init();
     float delta = fps().delta();
 
@@ -173,9 +189,6 @@ int initSDL(std::string const& windowTitle) {
     sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_TARGETTEXTURE);
     SDL_SetRenderDrawBlendMode(sdl_renderer, SDL_BLENDMODE_BLEND);
     SDL_RenderSetLogicalSize(sdl_renderer, sdl_screen_size.x, sdl_screen_size.y);
-
-    SDL_Rect clip_rect{0, 0, sdl_screen_size.x, sdl_screen_size.y};
-    SDL_RenderSetClipRect(sdl_renderer, &clip_rect);
 
     int result = Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 1024 );
     // Check load

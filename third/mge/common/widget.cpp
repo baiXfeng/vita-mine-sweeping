@@ -56,6 +56,8 @@ WidgetSignal::SignalType& WidgetSignal::signal(int type) {
 
 //=====================================================================================
 
+std::vector<SDL_Rect> Widget::_clipStack;
+
 Widget::Widget():
 _parent(nullptr),
 _userdata(nullptr),
@@ -249,18 +251,15 @@ void Widget::draw(SDL_Renderer* renderer) {
         return;
     }
     if (_clip) {
-        SDL_Rect clip_copy;
-        SDL_Rect clip_rect{
+        this->push_clip({
             int(_global_position.x),
             int(_global_position.y),
             int(_global_size.x),
             int(_global_size.y),
-        };
-        SDL_RenderGetClipRect(renderer, &clip_copy);
-        SDL_RenderSetClipRect(renderer, &clip_rect);
+        });
         this->onDraw(renderer);
         this->onChildrenDraw(renderer);
-        SDL_RenderSetClipRect(renderer, &clip_copy);
+        this->pop_clip();
     } else {
         this->onDraw(renderer);
         this->onChildrenDraw(renderer);
@@ -343,6 +342,16 @@ void Widget::modifyLayout() {
     for (auto& child : _children) {
         child->modifyLayout();
     }
+}
+
+void Widget::push_clip(SDL_Rect const& clip) {
+    SDL_RenderSetClipRect(_game.renderer(), &clip);
+    _clipStack.emplace_back(clip);
+}
+
+void Widget::pop_clip() {
+    _clipStack.pop_back();
+    SDL_RenderSetClipRect(_game.renderer(), &_clipStack.back());
 }
 
 void Widget::onModifyPosition(Vector2f const& position) {
