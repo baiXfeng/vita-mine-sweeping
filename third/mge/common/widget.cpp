@@ -1033,7 +1033,7 @@ void MaskWidget::onDraw(SDL_Renderer* renderer) {
     if (auto render_target = SDL_GetRenderTarget(renderer); render_target) {
         SDL_BlendMode blend_mode;
         SDL_GetRenderDrawBlendMode(renderer, &blend_mode);
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_INVALID);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
         SDL_RenderFillRectF(renderer, &dst);
         SDL_SetRenderDrawBlendMode(renderer, blend_mode);
     } else {
