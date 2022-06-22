@@ -237,6 +237,54 @@ private:
     Vector2f _distance;
 };
 
+class RotationTo : public WidgetAction {
+public:
+    RotationTo(Widget* target, float rotation, float duration);
+private:
+    void onFinish() override;
+    void onStep(float progress, float delta) override;
+private:
+    float _rotation;
+};
+
+class RotationBy : public WidgetAction {
+public:
+    RotationBy(Widget* target, float rotation, float duration);
+private:
+    void onFinish() override;
+    void onStep(float progress, float delta) override;
+    void Reset() override;
+private:
+    float _rotation;
+    float _distance;
+};
+
+class FadeTo : public Action {
+public:
+    FadeTo(Widget* target, unsigned char opacity, float duration);
+protected:
+    State Step(float dt) override;
+    void Reset() override;
+    State onStep(float dt);
+protected:
+    bool _first;
+    unsigned char _endValue;
+    Widget* _target;
+    float _step;
+    float _value;
+    float _ticks;
+    float _duration;
+};
+
+class FadeBy : public FadeTo {
+public:
+    FadeBy(Widget* target, unsigned char opacity, float duration);
+protected:
+    State Step(float dt) override;
+protected:
+    unsigned char _valueBy;
+};
+
 class Blink : public Action {
 public:
     Blink(Widget* target, int times, float duration);

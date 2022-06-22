@@ -19,9 +19,9 @@ public:
     void reload_data();
 private:
     void onUpdate(float delta) override;
-    bool onTouchBegen(mge::Vector2i const& point) override;
-    void onTouchMoved(mge::Vector2i const& point) override;
-    void onTouchEnded(mge::Vector2i const& point) override;
+    bool onMouseDown(mge::MouseEvent const& event) override;
+    void onMouseMotion(mge::MouseEvent const& event) override;
+    void onMouseUp(mge::MouseEvent const& event) override;
 private:
     size_t numberOfLayersInWidget(mge::GridMapWidget const* sender) override;
     mge::Vector2i sizeOfGridMap(mge::GridMapWidget const* sender) override;

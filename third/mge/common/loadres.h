@@ -15,6 +15,7 @@ mge_begin
 
 namespace res {
     std::string const& getAssetsPath();
+    std::string getWriteAblePath(std::string const& folderName);
 
     Texture::Ptr load_texture(SDL_Renderer* renderer, std::string const& fileName);
     Texture::Ptr load_texture(std::string const& fileName);

@@ -10,6 +10,7 @@
 #include "action.h"
 #include "font.h"
 #include "mouse.h"
+#include <string.h>
 
 mge_begin
 
@@ -64,6 +65,7 @@ _userdata(nullptr),
 _visible(true),
 _update(false),
 _clip(false),
+_renderTarget(false),
 _touchEnable(true),
 _pause_action_when_hidden(false),
 _dirty(true),
@@ -78,7 +80,7 @@ _scale({1.0f, 1.0f}),
 _opacity(255) {
     _children.reserve(10);
     ++_widgetCount;
-    setSize(_game.delegate()->screenSize().to<float>());
+    setSize(_game.delegate()->displaySize().to<float>());
     _global_size = _size;
 }
 
@@ -135,6 +137,33 @@ void Widget::enableUpdate(bool update) {
 
 void Widget::enableClip(bool clip) {
     _clip = clip;
+}
+
+void Widget::enableRenderTarget(bool e, bool force) {
+    if (e) {
+        if (_render != nullptr and !force) {
+            return;
+        }
+        _render = std::make_shared<RenderCopyEx>();
+        auto const& size = this->size();
+        assert(size.x > 0 and size.y > 0 and "Widget::enableRenderTarget error.");
+        auto texture = SDL_CreateTexture(
+                _game.renderer(),
+                SDL_PIXELFORMAT_RGBA8888,
+                SDL_TEXTUREACCESS_TARGET,
+                size.x,
+                size.y
+        );
+        if (texture) {
+            //some problem on psvita
+            //SDL_SetTextureScaleMode(texture, SDL_ScaleModeLinear);
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+        }
+        _render->setTexture(Texture::Ptr(new Texture(texture)));
+    } else {
+        _render = nullptr;
+    }
+    _renderTarget = e;
 }
 
 void Widget::setVisible(bool visible) {
@@ -236,7 +265,7 @@ void Widget::update(float delta) {
     if (_children.empty()) {
         return;
     }
-    auto list = _children;
+    WidgetArray list(_children);
     for (auto child : list) {
         if (child->parent() == nullptr) {
             // child is removed, but KeepAlive.
@@ -251,19 +280,70 @@ void Widget::draw(SDL_Renderer* renderer) {
         return;
     }
     if (_clip) {
-        this->push_clip({
-            int(_global_position.x),
-            int(_global_position.y),
-            int(_global_size.x),
-            int(_global_size.y),
-        });
-        this->onDraw(renderer);
-        this->onChildrenDraw(renderer);
+        if (_renderTarget) {
+            this->push_clip({
+                int(0),
+                int(0),
+                int(_global_size.x),
+                int(_global_size.y),
+            });
+            drawRenderTarget(renderer);
+        } else {
+            this->push_clip({
+                int(_global_position.x),
+                int(_global_position.y),
+                int(_global_size.x),
+                int(_global_size.y),
+            });
+            this->onDraw(renderer);
+            this->onChildrenDraw(renderer);
+        }
         this->pop_clip();
     } else {
-        this->onDraw(renderer);
-        this->onChildrenDraw(renderer);
+        if (_renderTarget) {
+            drawRenderTarget(renderer);
+        } else {
+            this->onDraw(renderer);
+            this->onChildrenDraw(renderer);
+        }
     }
+}
+
+void Widget::drawRenderTarget(SDL_Renderer* renderer) {
+
+    if (not _visible) {
+        return;
+    }
+
+    auto scale = _scale;
+    auto anchor = _anchor;
+    auto position = _position;
+    auto parent = _parent;
+    this->_scale = {1.0f, 1.0f};
+    this->_anchor = {0.0f, 0.0f};
+    this->_position = {0.0f, 0.0f};
+    this->_parent = nullptr;
+    this->modifyLayout();
+
+    auto render_target = SDL_GetRenderTarget(renderer);
+    SDL_SetRenderTarget(renderer, _render->texture()->data());
+    SDL_RenderClear(renderer);
+    this->onDraw(renderer);
+    this->onChildrenDraw(renderer);
+    SDL_SetRenderTarget(renderer, render_target);
+
+    _parent = parent;
+    _position = position;
+    _anchor = anchor;
+    _scale = scale;
+    this->modifyLayout();
+
+    _render->setAnchor(_anchor);
+    _render->setScale(_scale);
+    _render->setSize(_size.to<int>());
+    _render->setOpacity(_opacity);
+    _render->setAngle(_rotation);
+    _render->draw(renderer, _position.to<int>());
 }
 
 void Widget::onChildrenDraw(SDL_Renderer* renderer) {
@@ -512,7 +592,7 @@ void Widget::resumeAllActions() {
 
 //=====================================================================================
 
-LayerWidget::LayerWidget():FingerResponder(this) {
+LayerWidget::LayerWidget(): MouseResponder(this) {
     connect(ON_ENTER, [this](Widget* sender){
         _game.mouse().add(this);
     });
@@ -659,6 +739,11 @@ Texture::Ptr ImageWidget::getTexture() const {
     return _target->texture();
 }
 
+void ImageWidget::setColor(SDL_Color const& c) {
+    _target->setColor(c.r, c.g, c.b);
+    _target->setOpacity(c.a);
+}
+
 void ImageWidget::onModifyOpacity(unsigned char opacity) {
     _target->setOpacity(opacity);
 }
@@ -687,18 +772,18 @@ void ImageWidget::onDraw(SDL_Renderer* renderer) {
 //=====================================================================================
 
 ButtonWidget::ButtonWidget():
-ImageWidget(nullptr),
-FingerResponder(this),
-_state(UNKNOWN),
-_enable(true) {
+        ImageWidget(nullptr),
+        MouseResponder(this),
+        _state(UNKNOWN),
+        _enable(true) {
 
 }
 
 ButtonWidget::ButtonWidget(TexturePtr const& normal, TexturePtr const& pressed, TexturePtr const& disabled):
-ImageWidget(normal),
-FingerResponder(this),
-_state(NORMAL),
-_enable(true) {
+        ImageWidget(normal),
+        MouseResponder(this),
+        _state(NORMAL),
+        _enable(true) {
     setNormalTexture(normal);
     setPressedTexture(pressed);
     setDisabledTexture(disabled);
@@ -768,7 +853,7 @@ void ButtonWidget::onExit() {
     ImageWidget::onExit();
 }
 
-bool ButtonWidget::onTouchBegen(Vector2i const& point) {
+bool ButtonWidget::onMouseDown(MouseEvent const& event) {
     if (!_enable) {
         return false;
     }
@@ -776,16 +861,16 @@ bool ButtonWidget::onTouchBegen(Vector2i const& point) {
     return true;
 }
 
-void ButtonWidget::onTouchEnded(Vector2i const& point) {
+void ButtonWidget::onMouseUp(MouseEvent const& event) {
     setState(NORMAL);
-    if (point.x > 0 and point.x < _global_size.x and point.y > 0 and point.y < _global_size.y) {
+    if (event.x > 0 and event.x < _global_size.x and event.y > 0 and event.y < _global_size.y) {
         if (_selector != nullptr) {
             _selector(this);
         }
     }
 }
 
-void ButtonWidget::onTouchMoved(Vector2i const& point) {
+void ButtonWidget::onMouseMotion(MouseEvent const& event) {
 
 }
 
@@ -897,23 +982,23 @@ void ProgressBarWidget::onModifySize(Vector2f const& size) {
     setValue(_value);
 }
 
-bool ProgressBarWidget::onTouchBegen(Vector2i const& point) {
-    setValue(point.x / global_size().x);
+bool ProgressBarWidget::onMouseDown(MouseEvent const& event) {
+    setValue(event.x / global_size().x);
     if (_selector != nullptr) {
         _selector(this, BEGEN);
     }
     return true;
 }
 
-void ProgressBarWidget::onTouchMoved(Vector2i const& point) {
-    setValue(point.x / global_size().x);
+void ProgressBarWidget::onMouseMotion(MouseEvent const& event) {
+    setValue(event.x / global_size().x);
     if (_selector != nullptr) {
         _selector(this, MOVED);
     }
 }
 
-void ProgressBarWidget::onTouchEnded(Vector2i const& point) {
-    setValue(point.x / global_size().x);
+void ProgressBarWidget::onMouseUp(MouseEvent const& event) {
+    setValue(event.x / global_size().x);
     if (_selector != nullptr) {
         _selector(this, ENDED);
     }
@@ -948,7 +1033,7 @@ void MaskWidget::onDraw(SDL_Renderer* renderer) {
     if (auto render_target = SDL_GetRenderTarget(renderer); render_target) {
         SDL_BlendMode blend_mode;
         SDL_GetRenderDrawBlendMode(renderer, &blend_mode);
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_INVALID);
         SDL_RenderFillRectF(renderer, &dst);
         SDL_SetRenderDrawBlendMode(renderer, blend_mode);
     } else {
@@ -1128,6 +1213,10 @@ Widget::Ptr ScreenWidget::find(std::string const& name) const {
     return nullptr;
 }
 
+Vector2f const& ScreenWidget::size() const {
+    return WindowWidget::size();
+}
+
 bool ScreenWidget::hasAction(std::string const& name) const {
     return WindowWidget::hasAction(name);
 }
@@ -1142,10 +1231,6 @@ void ScreenWidget::stopAction(Action::Ptr const& action) {
 
 void ScreenWidget::stopAction(std::string const& name) {
     WindowWidget::stopAction(name);
-}
-
-Vector2f const& ScreenWidget::screen_size() const {
-    return size();
 }
 
 //=====================================================================================
@@ -1172,14 +1257,13 @@ void TTFLabel::setString(std::string const& s) {
     if (_font == nullptr or _s == s) {
         return;
     }
+    _font->setColor( _target->color() );
     setTexture(_font->createWithUTF8(_game.renderer(), s.empty() ? " " : s.c_str()));
     _s = s;
 }
 
 void TTFLabel::setString(std::string const& s, SDL_Color const& color) {
-    if (_font != nullptr) {
-        _font->setColor(color);
-    }
+    setColor(color);
     setString(s);
 }
 
@@ -1189,20 +1273,35 @@ std::string const& TTFLabel::str() const {
 
 //=====================================================================================
 
-FrameAnimationWidget::FrameAnimationWidget():
-ImageWidget(nullptr),
-_index(0),
-_frame_tick(0.0f),
-_frame_time(0.0f),
-_loop(false) {
-    enableUpdate(true);
+FrameImageWidget::FrameImageWidget():_index(0) {
+
 }
 
-void FrameAnimationWidget::setFrames(FrameArray const& frames) {
+FrameImageWidget::FrameArray const& FrameImageWidget::frames() const {
+    return _frames;
+}
+
+void FrameImageWidget::setFrames(FrameArray const& frames) {
     _frames = frames;
     if (_frames.size()) {
         setTexture(_frames[0]);
     }
+}
+
+void FrameImageWidget::setFrameIndex(uint32_t index) {
+    if (index < _frames.size()) {
+        _index = index;
+        setTexture(_frames[_index]);
+    }
+}
+
+//=====================================================================================
+
+FrameAnimationWidget::FrameAnimationWidget():
+_frame_tick(0.0f),
+_frame_time(0.0f),
+_loop(false) {
+    enableUpdate(true);
 }
 
 void FrameAnimationWidget::play(float duration, bool loop) {

@@ -60,6 +60,29 @@ void initKeyMapPS4(GamePad::KeyMap& km) {
     }
 }
 
+static std::map<int, int> keyboard_map = {
+        {'w', KeyCode::UP},
+        {'s', KeyCode::DOWN},
+        {'a', KeyCode::LEFT},
+        {'d', KeyCode::RIGHT},
+        {'l', KeyCode::A},
+        {'k', KeyCode::B},
+        {'i', KeyCode::X},
+        {'j', KeyCode::Y},
+        {'c', KeyCode::SELECT},
+        {'n', KeyCode::START},
+        {'u', KeyCode::L1},
+        {'o', KeyCode::R1},
+};
+
+void GamePadListener::onKeyboardDown(int key) {
+    this->onButtonDown(keyboard_map[key]);
+}
+
+void GamePadListener::onKeyboardUp(int key) {
+    this->onButtonUp(keyboard_map[key]);
+}
+
 GamePad::GamePad():_keyboard_event(false), _sleep(false) {
 #if defined(__vita__) or defined(__PSP__)
     initKeyMapVita(_keyValue);
@@ -142,9 +165,28 @@ void GamePad::onEvent(SDL_Event const& event) {
             }
             break;
         case SDL_KEYDOWN:
+        {
+            int key = event.key.keysym.sym;
+            if (_keyboardState[key]) {
+                return;
+            }
+            _keyboardState[key] = true;
+            if (_views.size() and not _sleep) {
+                _views.back()->onKeyboardDown(key);
+            }
+        }
+            break;
         case SDL_KEYUP:
-            // 键盘事件
-            this->_remapKeyboardEvent(event);
+        {
+            int key = event.key.keysym.sym;
+            if (not _keyboardState[key]) {
+                return;
+            }
+            _keyboardState[key] = false;
+            if (_views.size() and not _sleep) {
+                _views.back()->onKeyboardUp(key);
+            }
+        }
             break;
         default:
             break;

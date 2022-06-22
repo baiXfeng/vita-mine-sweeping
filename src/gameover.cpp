@@ -19,7 +19,7 @@ void GameOverView::onButtonDown(int key) {
     removeFromParent();
 }
 
-bool GameOverView::onTouchBegen(mge::Vector2i const& point) {
+bool GameOverView::onMouseDown(mge::MouseEvent const& event) {
     removeFromParent();
     return true;
 }

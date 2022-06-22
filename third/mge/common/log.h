@@ -11,6 +11,7 @@ namespace LOG {
         info,
         error,
         debug,
+        all,
     };
 }
 
@@ -27,24 +28,25 @@ namespace LOG {
 #define LOG_FINI() {    \
     debugNetFinish();   \
 }
-#elif defined(__PSP__)
-#include <pspdebug.h>
-
-#define LOG_INIT() {    \
-    pspDebugScreenInit(); \
-}
-#define LOG(format, args...) { \
-    pspDebugScreenSetTextColor(0xFFFFFFFF); \
-    pspDebugScreenPrintf(format, ##args);   \
-}
-#define LOG_FINI()
 #else
-#define LOG_INIT()
+#define LOG_INIT() (0)
 #define LOG(format, args...) printf(format, ##args)
-#define LOG_FINI()
+#define LOG_FINI() (0)
 #endif
 
+#define LOG_INFO(format, args...) LOG(format, ##args)
+#define LOG_ERROR(format, args...) LOG(format, ##args)
+#define LOG_DEBUG(format, args...) LOG(format, ##args)
+
 #define ENABLE_LOG false
+
+#if defined(__APPLE__)
+#undef ENABLE_LOG
+#define ENABLE_LOG true
+#elif defined(__WIN32__)
+#undef ENABLE_LOG
+#define ENABLE_LOG true
+#endif
 
 #if not ENABLE_LOG
 #undef LOG_INIT

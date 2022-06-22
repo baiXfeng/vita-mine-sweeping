@@ -10,42 +10,45 @@
 #include <SDL.h>
 #include "macro.h"
 #include "vector2.h"
+#include "mouse_event.h"
 
 mge_begin
 
 class Widget;
-class FingerResponder;
+class MouseResponder;
 class Mouse {
     friend class Game;
 public:
-    typedef std::list<FingerResponder*> List;
+    typedef std::list<MouseResponder*> List;
 public:
     Mouse();
 public:
     void sleep(float seconds);
-    void add(FingerResponder* resp);
-    void remove(FingerResponder* resp);
+    void add(MouseResponder* resp);
+    void remove(MouseResponder* resp);
 private:
     void onEvent(SDL_Event const& event);
     void onMouseEvent(SDL_Event const& event);
     void onFingerEvent(SDL_Event const& event);
 private:
-    void onFingerDown(Vector2i const& point);
-    void onFingerUp(Vector2i const& point);
-    void onFingerMotion(Vector2i const& point);
+    void onMouseDown(MouseEvent const& event);
+    void onMouseUp(MouseEvent const& event);
+    void onMouseMotion(MouseEvent const& event);
 private:
     void sortResponderList();
     void visit_widget(Widget* widget);
+    MouseResponder* getFocusResponder(Vector2i const& pos) const;
 private:
     bool _sleep;
     bool _usefinger;
     bool _finger_downed;
     bool _sort_dirty;
     uint32_t _zorder;
-    FingerResponder* _current;
+    MouseResponder* _current;
+    MouseResponder* _focus;
     List _responder;
 private:
-    typedef std::map<Widget*, FingerResponder*> ResponderMap;
+    typedef std::map<Widget*, MouseResponder*> ResponderMap;
     ResponderMap _insertResponder;
 };
 

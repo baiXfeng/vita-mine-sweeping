@@ -102,10 +102,11 @@ void PlayGame::onUpdate(float delta) {
     _move *= 0.98f;
 }
 
-bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
+bool PlayGame::onMouseDown(mge::MouseEvent const& event) {
 
     _move.reset();
 
+    auto point = mge::Vector2i{event.x, event.y};
     auto world_pos = covertToWorldPosition(point.to<float>());
     auto position = _gridlayer->getLayer(0)->covertToLocalPosition(world_pos);
 
@@ -121,7 +122,9 @@ bool PlayGame::onTouchBegen(mge::Vector2i const& point) {
     return true;
 }
 
-void PlayGame::onTouchMoved(mge::Vector2i const& point) {
+void PlayGame::onMouseMotion(mge::MouseEvent const& event) {
+
+    auto point = mge::Vector2i{event.x, event.y};
 
     if (_tile == nullptr) {
         _gridlayer->getCamera()->move_offset((_prev - point).to<float>());
@@ -156,7 +159,7 @@ void PlayGame::onTouchMoved(mge::Vector2i const& point) {
     }
 }
 
-void PlayGame::onTouchEnded(mge::Vector2i const& point) {
+void PlayGame::onMouseUp(mge::MouseEvent const& event) {
     if (_tile) {
         auto& position = _tile->position;
         _tile->pressed = false;

@@ -330,6 +330,101 @@ void MoveBy::Reset() {
 
 //=====================================================================================
 
+RotationTo::RotationTo(Widget* target, float rotation, float duration):WidgetAction(target, duration), _rotation(rotation) {
+
+}
+
+void RotationTo::onFinish() {
+    _target->setRotation(_rotation);
+}
+
+void RotationTo::onStep(float progress, float delta) {
+    auto distance = (_rotation - _target->rotation()) * delta;
+    _target->setRotation(_target->rotation() + distance);
+}
+
+//=====================================================================================
+
+RotationBy::RotationBy(Widget* target, float rotation, float duration):WidgetAction(target, duration), _rotation(rotation), _distance(rotation) {
+
+}
+
+void RotationBy::onFinish() {
+    _target->setRotation(_target->rotation() + _distance);
+}
+
+void RotationBy::onStep(float progress, float delta) {
+    auto rotation = _rotation * (1 - progress);
+    auto distance = rotation * delta;
+    _target->setRotation(_target->rotation() + distance);
+    _distance -= distance;
+}
+
+void RotationBy::Reset() {
+    WidgetAction::Reset();
+    _distance = _rotation;
+}
+
+//=====================================================================================
+
+FadeTo::FadeTo(Widget* target, unsigned char opacity, float duration):
+_target(target),
+_endValue(opacity),
+_duration(duration),
+_first(true) {
+    Reset();
+}
+
+State FadeTo::Step(float dt) {
+    if (_first) {
+        _value = _target->opacity();
+        _step = (_endValue - _target->opacity()) / _duration;
+        _first = false;
+    }
+    return onStep(dt);
+}
+
+void FadeTo::Reset() {
+    _ticks = 0;
+    _first = true;
+}
+
+State FadeTo::onStep(float dt) {
+    _ticks += dt;
+    if (int(_ticks*1000) >= int(_duration*1000)) {
+        _target->setOpacity(_endValue);
+        return FINISH;
+    }
+    _value += _step * dt;
+    if (_step > 0 and _value >= _endValue) {
+        _value = _endValue;
+    } else if (_step < 0 and _value <= _endValue) {
+        _value = _endValue;
+    }
+    _target->setOpacity(_value);
+    return RUNNING;
+}
+
+//=====================================================================================
+
+FadeBy::FadeBy(Widget* target, unsigned char opacity, float duration):FadeTo(target, opacity, duration) {
+    _valueBy = opacity;
+    Reset();
+}
+
+State FadeBy::Step(float dt) {
+    if (_first) {
+        _endValue = _target->opacity() + _valueBy;
+        _endValue = _endValue >= 255 ? 255 : (_endValue <= 0 ? 0 : _endValue);
+        _value = _target->opacity();
+        _step = (_endValue - _target->opacity()) / _duration;
+        _first = false;
+    }
+    return onStep(dt);
+}
+
+//=====================================================================================
+
 Blink::Blink(Widget* target, int times, float duration):
 _target(target),
 _duration(duration),

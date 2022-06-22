@@ -11,7 +11,7 @@ RenderCopy::RenderCopy():
 _texture(nullptr),
 _srcrect({0,0,0,0}),
 _size({0,0}),
-_opacity(255) {}
+_color({255, 255, 255, 255}) {}
 
 Texture::Ptr& RenderCopy::texture() {
     return _texture;
@@ -53,11 +53,21 @@ Vector2i const& RenderCopy::size() const {
 }
 
 void RenderCopy::setOpacity(int opacity) {
-    _opacity = opacity % 256;
+    _color.a = opacity % 256;
+}
+
+void RenderCopy::setColor(uint8_t r, uint8_t g, uint8_t b) {
+    _color.r = r;
+    _color.g = g;
+    _color.b = b;
 }
 
 int RenderCopy::opacity() const {
-    return _opacity;
+    return _color.a;
+}
+
+SDL_Color const& RenderCopy::color() const {
+    return _color;
 }
 
 void RenderCopy::draw(SDL_Renderer* renderer, Vector2i const& position) {
@@ -70,8 +80,10 @@ void RenderCopy::draw(SDL_Renderer* renderer, Vector2i const& position) {
         _size.x,
         _size.y
     };
-    SDL_SetTextureAlphaMod(_texture->data(), _opacity);
-    SDL_RenderCopy(renderer, _texture->data(), &_srcrect, &dstrect);
+    auto texture = _texture->data();
+    TextureColor tc(texture);
+    tc.setColor(_color);
+    SDL_RenderCopy(renderer, texture, &_srcrect, &dstrect);
 }
 
 RenderCopyEx::RenderCopyEx():
@@ -125,8 +137,10 @@ void RenderCopyEx::draw(SDL_Renderer* renderer, Vector2i const& position) {
     } else if (_scale.y < 0) {
         flip = SDL_RendererFlip::SDL_FLIP_VERTICAL;
     }
-    SDL_SetTextureAlphaMod(_texture->data(), _opacity);
-    SDL_RenderCopyEx(renderer, _texture->data(), &_srcrect, &dstrect, _angle, &center, flip);
+    auto texture = _texture->data();
+    TextureColor tc(texture);
+    tc.setColor(_color);
+    SDL_RenderCopyEx(renderer, texture, &_srcrect, &dstrect, _angle, &center, flip);
 }
 
 RenderFillRect::RenderFillRect(): _color({0, 0, 0, 255}) {

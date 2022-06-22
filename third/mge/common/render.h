@@ -28,6 +28,25 @@ private:
     SDL_Color _back;
 };
 
+class TextureColor {
+public:
+    TextureColor(SDL_Texture* texture):_texture(texture) {
+        SDL_GetTextureColorMod(_texture, &_back.r, &_back.g, &_back.b);
+        SDL_GetTextureAlphaMod(_texture, &_back.a);
+    }
+    ~TextureColor() {
+        SDL_SetTextureColorMod(_texture, _back.r, _back.g, _back.b);
+        SDL_SetTextureAlphaMod(_texture, _back.a);
+    }
+    void setColor(SDL_Color const& c) {
+        SDL_SetTextureColorMod(_texture, c.r, c.g, c.b);
+        SDL_SetTextureAlphaMod(_texture, c.a);
+    }
+private:
+    SDL_Texture* _texture;
+    SDL_Color _back;
+};
+
 class Texture;
 class RenderCopy {
 public:
@@ -44,13 +63,15 @@ public:
     void setSize(Vector2i const& size);
     Vector2i const& size() const;
     void setOpacity(int opacity);
+    void setColor(uint8_t r, uint8_t g, uint8_t b);
     int opacity() const;
+    SDL_Color const& color() const;
 public:
     virtual void draw(SDL_Renderer* renderer, Vector2i const& position = {0, 0});
 protected:
-    int _opacity;
     TexturePtr _texture;
     SDL_Rect _srcrect;
+    SDL_Color _color;
     Vector2i _size;
 };
 

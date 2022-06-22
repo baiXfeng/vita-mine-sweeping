@@ -7,36 +7,45 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 namespace mge {
     class Widget;
+    class FileReader;
 }
 
 namespace ui {
     class Document;
-    class FileReader;
     class LoaderPool;
     class NodeLoader;
     class LayoutInfo;
+    using FileReader = mge::FileReader;
     class LayoutReader {
         typedef std::shared_ptr<mge::Widget> Node;
         typedef std::shared_ptr<LayoutInfo> Info;
         typedef std::vector<Info> InfoStack;
         typedef std::vector<mge::Widget*> OwnerStack;
+        class Context {
+        public:
+            mge::Widget* parent;
+            NodeLoader* loader;
+            Context(mge::Widget* parent):parent(parent), loader(nullptr) {}
+            Context():parent(nullptr), loader(nullptr) {}
+        };
     public:
         LayoutReader(LoaderPool* loader_library, FileReader* r);
         virtual ~LayoutReader();
     public:
-        Node readNode(std::string const& fileName, mge::Widget* parent = nullptr);
+        Node readNode(std::string const& fileName);
+        Node readNode(std::string const& fileName, Context& c);
         void setFileReader(FileReader* reader);
         void setLoaderPool(LoaderPool* loader);
     public:
         LayoutInfo const& info() const;
         mge::Widget* const owner() const;
     private:
-        Node readNode(mge::Widget* parent, Document* d, bool owner = false);
+        Node readNode(Context& c, Document* d, bool owner = false);
         void parseProperties(NodeLoader* loader, mge::Widget* node, mge::Widget* parent, Document* d);
-        void assignMember(mge::Widget* target, const char* name, mge::Widget* node);
     private:
         LoaderPool* _loader;
         FileReader* _fileReader;

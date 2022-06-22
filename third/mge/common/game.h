@@ -25,7 +25,8 @@ public:
         virtual ~Delegate() {}
     public:
         virtual std::string windowTitle() = 0;
-        virtual Vector2i screenSize() = 0;
+        virtual Vector2i windowSize() = 0;
+        virtual Vector2i displaySize() = 0;
     protected:
         virtual void init() = 0;
         virtual void fini() = 0;
@@ -40,8 +41,11 @@ public:
         std::string windowTitle() override {
             return "my_game";
         }
-        Vector2i screenSize() override {
+        Vector2i displaySize() override {
             return {GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT};
+        }
+        Vector2i windowSize() override {
+            return displaySize();
         }
         void init() override {}
         void fini() override {}

@@ -14,7 +14,7 @@
 #include "gamepad.h"
 #include "event.h"
 #include "observer.h"
-#include "finger_responder.h"
+#include "mouse_responder.h"
 
 mge_begin
 
@@ -42,8 +42,8 @@ protected:
 
 class Action;
 class BaseActionExecuter;
+class RenderCopyEx;
 class Widget : public WidgetSignal, public GamePadListener, public Event::Listener {
-    friend class Game;
 public:
     typedef std::shared_ptr<Widget> WidgetPtr;
     typedef std::vector<WidgetPtr> WidgetArray;
@@ -54,6 +54,8 @@ public:
         ON_ENTER = 0xABEF0001,
         ON_EXIT,
     };
+    typedef RenderCopyEx Render;
+    typedef std::shared_ptr<Render> RenderPtr;
 public:
     template<typename T, typename... Args>
     static Ptr New(Args const&... args) {
@@ -77,9 +79,9 @@ public:
 public:
     void enableUpdate(bool update);
     void enableClip(bool clip);
+    void enableRenderTarget(bool e, bool force);
     void setVisible(bool visible);
     void performLayout();
-    void try_performLayout();
 public:
     bool isTouchEnabled() const;
     void setTouchEnable(bool b);
@@ -105,6 +107,7 @@ protected:
     virtual void onChildrenDraw(SDL_Renderer* renderer);
     virtual void onDirty() {}
     virtual void onVisible(bool visible) {}
+    void drawRenderTarget(SDL_Renderer* renderer);
 protected:
     virtual void enter();
     virtual void exit();
@@ -168,6 +171,7 @@ protected:
     bool _visible;
     bool _update;
     bool _clip;
+    bool _renderTarget;
     bool _touchEnable;
     bool _pause_action_when_hidden;
     bool _dirty;
@@ -184,14 +188,15 @@ protected:
     std::string _name;
     WidgetArray _children;
     ActionExecuterPtr _action;
+    RenderPtr _render;
     static std::vector<SDL_Rect> _clipStack;
 };
 
-class LayerWidget : public Widget, public FingerResponder {
+class LayerWidget : public Widget, public MouseResponder {
 public:
     LayerWidget();
 protected:
-    bool onTouchBegen(Vector2i const& point) override {
+    bool onMouseDown(MouseEvent const& event) override {
         return true;
     }
 };
@@ -244,6 +249,7 @@ public:
     void setTexture(TexturePtr const& texture);
     void setTexture(TexturePtr const& texture, SDL_Rect const& srcrect);
     TexturePtr getTexture() const;
+    void setColor(SDL_Color const& c);
 protected:
     void onDraw(SDL_Renderer* renderer) override;
     void onModifyOpacity(unsigned char opacity) override;
@@ -251,11 +257,11 @@ protected:
     void onModifySize(Vector2f const& size) override;
     void onModifyScale(Vector2f const& scale) override;
     void onModifyAnchor(Vector2f const& anchor) override;
-private:
+protected:
     RenderPtr _target;
 };
 
-class ButtonWidget : public ImageWidget, public FingerResponder {
+class ButtonWidget : public ImageWidget, public MouseResponder {
 public:
     typedef std::function<void(Widget*)> CallBack;
     typedef std::shared_ptr<Texture> TexturePtr;
@@ -283,9 +289,9 @@ public:
 private:
     void onEnter() override;
     void onExit() override;
-    bool onTouchBegen(Vector2i const& point) override;
-    void onTouchEnded(Vector2i const& point) override;
-    void onTouchMoved(Vector2i const& point) override;
+    bool onMouseDown(MouseEvent const& event) override;
+    void onMouseUp(MouseEvent const& event) override;
+    void onMouseMotion(MouseEvent const& event) override;
 private:
     bool _enable;
     State _state;
@@ -317,9 +323,9 @@ protected:
     void onEnter() override;
     void onModifyScale(Vector2f const& scale) override;
     void onModifySize(Vector2f const& size) override;
-    bool onTouchBegen(Vector2i const& point) override;
-    void onTouchMoved(Vector2i const& point) override;
-    void onTouchEnded(Vector2i const& point) override;
+    bool onMouseDown(MouseEvent const& event) override;
+    void onMouseMotion(MouseEvent const& event) override;
+    void onMouseUp(MouseEvent const& event) override;
 protected:
     float _value;
     Widget* _clipBox;
@@ -383,16 +389,14 @@ public:
         this->pop();
         this->template push<T>(args...);
     }
-public:
-    void update(float delta);
+    void update(float delta) override;
     void render(SDL_Renderer* renderer);
-public:
-    Vector2f const& screen_size() const;
 public:
     int scene_size() const;
     WidgetPtr& scene_at(int index) const;
     WidgetPtr& scene_back() const;
     WidgetPtr find(std::string const& name) const;
+    Vector2f const& size() const;
 public:
     bool hasAction(std::string const& name) const;
     void runAction(ActionPtr const& action);
@@ -422,13 +426,26 @@ private:
     std::string _s;
 };
 
-class FrameAnimationWidget : public ImageWidget {
+class FrameImageWidget : public ImageWidget {
+public:
+    typedef std::vector<TexturePtr> FrameArray;
+public:
+    FrameImageWidget();
+public:
+    FrameArray const& frames() const;
+    void setFrames(FrameArray const& frames);
+    void setFrameIndex(uint32_t index);
+protected:
+    int _index;
+    FrameArray _frames;
+};
+
+class FrameAnimationWidget : public FrameImageWidget {
 public:
     typedef std::vector<TexturePtr> FrameArray;
 public:
     FrameAnimationWidget();
 public:
-    void setFrames(FrameArray const& frames);
     void play(float duration, bool loop = true);
     void play_once(float duration);
     void stop();
@@ -437,10 +454,8 @@ private:
     void onAnimate(float delta);
 private:
     bool _loop;
-    int _index;
     float _frame_tick;
     float _frame_time;
-    FrameArray _frames;
 };
 
 mge_end

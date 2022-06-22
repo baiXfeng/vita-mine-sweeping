@@ -4,6 +4,7 @@
 
 #include "font.h"
 #include "loadres.h"
+#include <string.h>
 
 mge_begin
 

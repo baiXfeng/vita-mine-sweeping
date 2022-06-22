@@ -8,6 +8,10 @@
 #include <list>
 #include <algorithm>
 
+#if defined(__PSP__)
+#include <pspkernel.h>
+#endif
+
 mge_begin
 
 namespace res {
@@ -26,6 +30,21 @@ namespace res {
         }
 #endif
         return assets_path;
+    }
+
+    std::string getWriteAblePath() {
+        static std::string write_able_path;
+#if defined(__vita__)
+        if (write_able_path.empty()) {
+            write_able_path = "ux0:data/";
+        }
+#elif defined(__PSP__)
+        if (write_able_path.empty()) {
+            write_able_path = "ms0:/PSP/DATA/";
+            sceIoMkdir("ms0:/PSP/DATA", 0777);
+        }
+#endif
+        return write_able_path;
     }
 
     Texture::Ptr load_texture(SDL_Renderer *renderer, std::string const& fileName) {
@@ -61,6 +80,7 @@ namespace res {
     TTFont::Ptr find_ttf_font(std::string const& fontName, unsigned int size) {
         for (auto& iter : _ttfFontCache) {
             if (iter->fontPath() == fontName and iter->fontSize() == size) {
+                iter->setColor(255, 255, 255, 255);
                 return iter;
             }
         }
@@ -74,6 +94,7 @@ namespace res {
         }
         ptr = TTFont::New(getAssetsPath() + fileName, size);
         ptr->setFontPath(fileName);
+        ptr->setColor(255, 255, 255, 255);
         _ttfFontCache.push_back(ptr);
         return ptr;
     }

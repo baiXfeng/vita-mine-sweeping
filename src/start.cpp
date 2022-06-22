@@ -6,7 +6,7 @@
 #include "common/action.h"
 #include "common/game.h"
 #include "common/xml_layout.h"
-#include "uilayout/ui-layout.h"
+#include "ui-layout/ui-layout.h"
 #include "game.h"
 
 using namespace mge;
@@ -43,7 +43,7 @@ void StartView::onButtonDown(int key) {
     runAction(Action::Ptr(new Sequence({blink, call})));
 }
 
-bool StartView::onTouchBegen(mge::Vector2i const& point) {
+bool StartView::onMouseDown(mge::MouseEvent const& event) {
     onButtonDown(KeyCode::A);
     return true;
 }

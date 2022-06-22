@@ -6,7 +6,7 @@
 #define SDL2_UI_GAMEOVER_H
 
 #include "common/widget.h"
-#include "uilayout/ui-layout.h"
+#include "ui-layout/ui-layout.h"
 
 class GameOverView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener {
 public:
@@ -16,7 +16,7 @@ public:
 private:
     bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) override;
     void onButtonDown(int key) override;
-    bool onTouchBegen(mge::Vector2i const& point) override;
+    bool onMouseDown(mge::MouseEvent const& event) override;
 private:
     mge::TTFLabel* _tips;
 };

@@ -27,9 +27,9 @@ public:
     }
     bool load(std::string const& name);
     int play(int loops);
-private:
+protected:
     void free();
-private:
+protected:
     Mix_Music* _music;
 };
 
@@ -50,9 +50,9 @@ public:
     bool paused() const;
     int channel() const;
     void resetChannel();
-private:
+protected:
     void free();
-private:
+protected:
     int _channel;
     Mix_Chunk* _chunk;
 };

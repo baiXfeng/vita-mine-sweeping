@@ -27,37 +27,15 @@ file( GLOB
 		*.c*
 		src/*.c*
 		third/mge/common/*.c*
-		third/mge/uilayout/*.c*
-		third/lua/*.c*
-		third/lutok3/src/lutok3/*.c*
-		third/box2d/src/collision/*.c*
-		third/box2d/src/common/*.c*
-		third/box2d/src/dynamics/*.c*
-		third/box2d/src/rope/*.c*
-		third/delabella/delabella.cpp
-		third/a-star/source/*.c*
+		third/mge/ui-layout/*.c*
 		third/pugixml/src/*.c*
 		third/pystring/pystring.cpp
 )
-
-list(REMOVE_ITEM BASIC_SOURCE
-		${CMAKE_CURRENT_SOURCE_DIR}/third/lua/lua.c
-		${CMAKE_CURRENT_SOURCE_DIR}/third/lua/ltests.c)
 
 include_directories(
 		.
 		third
 		third/mge
-		third/entt/src
-		third/cereal/include
-		third/eluna/eluna
-		third/lua
-		third/lutok3/src/lutok3
-		third/box2d/include
-		third/box2d/src
-		third/random/include
-		third/delabella
-		third/a-star/source
 		third/pugixml/src
 		third/pystring
 )

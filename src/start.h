@@ -6,7 +6,7 @@
 #define SDL2_UI_START_H
 
 #include "common/widget.h"
-#include "uilayout/ui-layout.h"
+#include "ui-layout/ui-layout.h"
 
 class StartView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutNodeListener, public mge::ScreenWidgetListener {
 public:
@@ -15,7 +15,7 @@ private:
     bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) override;
     void onLayoutLoaded() override;
     void onButtonDown(int key) override;
-    bool onTouchBegen(mge::Vector2i const& point) override;
+    bool onMouseDown(mge::MouseEvent const& event) override;
     void gotoGame();
 private:
     void onScreenWake() override;

@@ -30,7 +30,9 @@ namespace ui {
     class LayoutVariableAssigner {
     public:
         virtual ~LayoutVariableAssigner() {}
-        virtual bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) = 0;
+        virtual bool onAssignMember(mge::Widget* target, const char* name, mge::Widget* node) {
+            return false;
+        }
         virtual bool onAssignProperty(mge::Widget* target, const char* name, const char* value) {
             return false;
         }

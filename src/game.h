@@ -6,7 +6,7 @@
 #define SDL2_UI_GAME_H
 
 #include "common/widget.h"
-#include "uilayout/ui-layout.h"
+#include "ui-layout/ui-layout.h"
 #include "context.h"
 
 class PlayGame;

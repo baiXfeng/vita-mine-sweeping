@@ -11,8 +11,8 @@
 #include "common/loadres.h"
 #include "common/action.h"
 #include "common/xml_layout.h"
-#include "uilayout/ui-layout.h"
-#include "uilayout/node-loader.h"
+#include "ui-layout/ui-layout.h"
+#include "ui-layout/node-loader.h"
 #include "src/start.h"
 #include "src/game.h"
 #include "src/play.h"
@@ -30,11 +30,15 @@ public:
         _game.uilayout().getLoaderPool()->addLoader<GameOverViewLoader>("GameOver");
         _game.uilayout().getLoaderPool()->addLoader<OptionViewLoader>("OptionView");
 
+        /*
         auto texture = mge::res::load_texture("assets/images/title-bg.png");
         _game.screen().push<mge::ImageWidget>(texture);
         _game.screen().scene_back()->defer([]{
             _game.screen().replace( _game.uilayout().readNode("assets/layouts/start.xml") );
         }, 0.02f);
+         */
+
+        _game.screen().push( _game.uilayout().readNode("assets/layouts/test.xml") );
     }
     void update(float delta) override {
         _game.screen().update(delta);
@@ -47,5 +51,7 @@ public:
         LOG_FINI();
     }
 };
+
+Startup(MyApp);
 
 #endif //SDL2_UI_MYGAME_H

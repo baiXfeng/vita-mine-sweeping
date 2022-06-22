@@ -46,6 +46,8 @@ public:
     virtual void onButtonDown(int key) {}
     virtual void onButtonUp(int key) {}
     virtual void onJoyAxisMotion(JOYIDX joy_id, int x, int y) {}
+    virtual void onKeyboardDown(int key);
+    virtual void onKeyboardUp(int key);
 };
 
 class Widget;
@@ -74,6 +76,7 @@ private:
     bool _keyboard_event;
     KeyMap _keyValue;
     KeyState _keyState;
+    std::map<int, bool> _keyboardState;
     Vector2i _joyValue[2];
     List _views;
 };

@@ -6,7 +6,7 @@
 #define SDL2_UI_OPTION_H
 
 #include "common/widget.h"
-#include "uilayout/ui-layout.h"
+#include "ui-layout/ui-layout.h"
 
 class Context;
 class OptionView : public mge::GamePadWidget, public ui::LayoutVariableAssigner, public ui::LayoutSelectorAssigner, public ui::LayoutNodeListener {
