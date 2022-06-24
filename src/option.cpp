@@ -142,6 +142,6 @@ void OptionView::setBarValue(Index i, uint32_t value) {
     };
     char temp[80] = {0};
     sprintf(temp, text[i].c_str(), value);
-    _text[i]->fast_to<mge::TTFLabel>()->setString(temp);
+    _text[i]->setString(temp);
     _valueCache[i] = value;
 }
